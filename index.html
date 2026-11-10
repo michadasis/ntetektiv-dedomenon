@@ -185,6 +185,14 @@ input[type=range]{width:100%;accent-color:var(--pri);min-height:32px}
 .chl li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line)}
 .chl .st{font-size:1.2rem;line-height:1.2}
 textarea{font:inherit;width:100%;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.code{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:.88rem;background:var(--bg2);border-radius:12px;padding:10px 8px;margin:10px 0;list-style:none;counter-reset:ln;overflow-x:auto;max-width:100%}
+.code li{counter-increment:ln;white-space:pre;padding:2px 8px;border-radius:6px}
+.code li::before{content:counter(ln);display:inline-block;width:2em;color:var(--mut)}
+.code li.cur{background:var(--hl);color:#1c2240;font-weight:700}
+.code li.cur::before{color:#1c2240}
+.algcols{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.algstat{font-weight:600;min-height:1.6em}
+@media (max-width:760px){.algcols{grid-template-columns:minmax(0,1fr)}}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:center}
 .hero h1{font-size:2.1rem;margin:2px 0 6px}
 .nick{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-weight:600;font-size:.92rem}
@@ -1090,9 +1098,78 @@ const LAB_CH = [
   { id: 'lab.c2', t: 'Φτιάξε δεδομένα όπου η <b>μέση τιμή ξεπερνά τη διάμεσο</b> κατά τουλάχιστον 1 (δοκίμασε μια ακραία τιμή!).', test: d => d.length >= 3 && mean(d) - median(d) >= 1 - 1e-9 },
   { id: 'lab.c3', t: 'Φτιάξε <b>τουλάχιστον 6</b> βαθμούς, όχι όλους ίδιους, με <b>CV &lt; 10%</b> (ομοιογενή δεδομένα).', test: d => d.length >= 6 && mean(d) > 0 && variance(d) > 0 && Math.sqrt(variance(d)) / mean(d) < 0.1 },
   { id: 'lab.c4', t: 'Φτιάξε δεδομένα με <b>δύο επικρατούσες τιμές</b>.', test: d => modes(d).length === 2 }];
+/* ---------- ο αλγόριθμος βήμα-βήμα (υπολογιστική σκέψη) ---------- */
+const ALG_DEFAULT = [6, 8, 5, 9, 7];
+const ALG_TASKS = ['lab.a1', 'lab.a2', 'lab.a3'];
+const ALG_CODE = ['άθροισμα ← 0', 'πλήθος ← 0', 'Για κάθε τιμή x της λίστας επανάλαβε', '    άθροισμα ← άθροισμα + x', '    πλήθος ← πλήθος + 1', 'Τέλος_επανάληψης', 'μέση_τιμή ← άθροισμα / πλήθος', 'Εμφάνισε μέση_τιμή'];
+const MED_CODE = ['ταξινόμησε τη λίστα σε αύξουσα σειρά', 'Αν πλήθος MOD 2 = 1 τότε', '    διάμεσος ← λίστα[(πλήθος + 1) / 2]', 'αλλιώς', '    διάμεσος ← (λίστα[πλήθος / 2] + λίστα[πλήθος / 2 + 1]) / 2', 'Τέλος_αν'];
+function algStates(list) {
+  const st = []; let sum = 0, cnt = 0;
+  st.push({ line: 0, sum: 0, cnt: null, x: null }, { line: 1, sum: 0, cnt: 0, x: null });
+  list.forEach((x, i) => { st.push({ line: 2, sum, cnt, x, i }); sum += x; st.push({ line: 3, sum, cnt, x, i }); cnt++; st.push({ line: 4, sum, cnt, x, i, row: true }); });
+  st.push({ line: 5, sum, cnt, x: null });
+  const m = cnt ? sum / cnt : NaN;
+  st.push({ line: 6, sum, cnt, x: null, mean: m }, { line: 7, sum, cnt, x: null, mean: m, out: true });
+  return st;
+}
+function algCard() {
+  let list = ALG_DEFAULT.slice(), states = algStates(list), k = -1;
+  const codeEl = el('ol', { class: 'code', 'aria-label': 'Ψευδοκώδικας υπολογισμού της μέσης τιμής' }, ...ALG_CODE.map(l => el('li', {}, l)));
+  const vars = el('div', { class: 'stats' }), status = el('p', { class: 'algstat', 'aria-live': 'polite' });
+  const tb = el('tbody'), traceT = el('div', { class: 'tblwrap' }, el('table', { class: 'tbl compact' }, el('thead', {}, el('tr', {}, ...['Πέρασμα', 'x', 'άθροισμα', 'πλήθος'].map(h => el('th', { scope: 'col' }, h)))), tb));
+  const listIn = el('input', { class: 'txt', type: 'text', id: 'alg-list', value: list.join(', '), 'aria-label': 'Λίστα τιμών για τον αλγόριθμο' });
+  const stepB = el('button', { class: 'btn pri', type: 'button' }, '▶ Επόμενο βήμα');
+  const runB = el('button', { class: 'btn', type: 'button' }, '⏩ Μέχρι το τέλος');
+  const resetB = el('button', { class: 'btn ghost', type: 'button' }, '↺ Από την αρχή');
+  const v = x => (x === null || x === undefined) ? '—' : fmt(x);
+  function draw() {
+    const s = states[k];
+    [...codeEl.children].forEach((li, i) => li.classList.toggle('cur', !!s && s.line === i));
+    vars.innerHTML = '';
+    [['x', s ? v(s.x) : '—'], ['άθροισμα', s ? v(s.sum) : '—'], ['πλήθος', s ? v(s.cnt) : '—'], ['μέση_τιμή', s && s.mean !== undefined ? v(s.mean) : '—']].forEach(([a, b]) => vars.append(el('div', { class: 'stat' }, el('span', {}, a), el('b', {}, b))));
+    tb.innerHTML = '';
+    states.slice(0, k + 1).filter(t => t.row).forEach(t => tb.append(el('tr', {}, el('td', {}, String(t.i + 1)), el('td', {}, fmt(t.x)), el('td', {}, fmt(t.sum)), el('td', {}, fmt(t.cnt)))));
+    if (!s) status.textContent = `Λίστα: ${list.join(', ')}. Πάτησε «Επόμενο βήμα» για να εκτελέσεις τον αλγόριθμο γραμμή-γραμμή.`;
+    else if (s.out) status.innerHTML = `✔️ Τέλος! Εμφανίζεται: <b>μέση_τιμή = ${fmt(s.mean)}</b> (${states.filter(t => t.row).length} περάσματα της επανάληψης).`;
+    else status.textContent = `Βήμα ${k + 1} από ${states.length}: εκτελείται η γραμμή ${s.line + 1}.`;
+    stepB.disabled = runB.disabled = k >= states.length - 1;
+  }
+  stepB.onclick = () => { if (k < states.length - 1) { k++; draw(); } };
+  runB.onclick = () => { k = states.length - 1; draw(); };
+  resetB.onclick = () => { k = -1; draw(); };
+  const loadB = el('button', { class: 'btn ghost', type: 'button' }, 'Φόρτωσε τη λίστα');
+  loadB.onclick = () => {
+    const d = listIn.value.split(/[\s;,]+/).filter(Boolean).map(Number);
+    if (!d.length || d.length > 12 || d.some(x => !Number.isInteger(x) || x < 0 || x > 100)) { status.textContent = 'Γράψε από 1 έως 12 ακέραιους από 0 έως 100, χωρισμένους με κενό ή κόμμα.'; return; }
+    list = d; states = algStates(list); k = -1; draw();
+  };
+  listIn.addEventListener('keydown', e => { if (e.key === 'Enter') loadB.onclick(); });
+  draw();
+  return el('section', { class: 'card', id: 'lab-alg' },
+    el('h2', {}, '🤖 Πώς το υπολογίζει ο υπολογιστής;'),
+    el('p', { class: 'mut', html: 'Πίσω από την <code>AVERAGE</code> κρύβεται ένας <b>αλγόριθμος</b>: μια <b>μεταβλητή-αθροιστής</b> και μια <b>επανάληψη</b>. Εκτέλεσέ τον βήμα-βήμα και παρακολούθησε πώς αλλάζουν οι μεταβλητές.' }),
+    el('div', { class: 'row' }, el('label', { for: 'alg-list', class: 'mut small' }, 'Λίστα:'), listIn, loadB),
+    el('div', { class: 'algcols' }, el('div', {}, codeEl, el('div', { class: 'row' }, stepB, runB, resetB), status), el('div', {}, vars, traceT)),
+    el('h3', {}, 'Και η διάμεσος; Χρειάζεται ταξινόμηση και συνθήκη'),
+    el('ol', { class: 'code', 'aria-label': 'Ψευδοκώδικας υπολογισμού της διαμέσου' }, ...MED_CODE.map(l => el('li', {}, l))),
+    el('p', { class: 'mut small', html: 'Σε Python τα ίδια γράφονται <code>sum(βαθμοί) / len(βαθμοί)</code> και <code>statistics.median(βαθμοί)</code>.' }),
+    numQ({ id: 'lab.a1', prompt: 'Για τη λίστα <b>6, 8, 5, 9, 7</b>: πόσες φορές θα εκτελεστεί η εντολή <code>άθροισμα ← άθροισμα + x</code>;', answer: 5, tol: 0.001, dec: 0,
+      alt: [{ v: 8, msg: 'Το 8 είναι το πλήθος των γραμμών του αλγορίθμου. Η εντολή βρίσκεται μέσα στην επανάληψη: πόσες τιμές έχει η λίστα;' }, { v: 1, msg: 'Η εντολή είναι μέσα στην επανάληψη, άρα εκτελείται μία φορά για κάθε τιμή της λίστας.' }, { v: 35, msg: 'Το 35 είναι η τελική τιμή του αθροίσματος. Ζητείται πόσες φορές εκτελείται η εντολή.' }],
+      hints: ['Η εντολή είναι μέσα στην επανάληψη «Για κάθε τιμή x…».', 'Η λίστα έχει 5 τιμές.'],
+      solution: 'Η επανάληψη εκτελείται μία φορά για κάθε τιμή της λίστας: <b>5</b> φορές.', ok: 'Μία φορά για κάθε τιμή της λίστας.' }),
+    numQ({ id: 'lab.a2', prompt: 'Ποια τιμή έχει η μεταβλητή <b>άθροισμα</b> μετά το <b>3ο</b> πέρασμα της επανάληψης (λίστα 6, 8, 5, 9, 7);', answer: 19, tol: 0.001, dec: 0,
+      alt: [{ v: 35, msg: 'Αυτό είναι το τελικό άθροισμα, μετά από 5 περάσματα.' }, { v: 5, msg: 'Το 5 είναι η 3η τιμή της λίστας· ζητείται το άθροισμα μέχρι και αυτήν.' }, { v: 14, msg: 'Αυτό είναι μετά το 2ο πέρασμα (6 + 8).' }, { v: 3, msg: 'Το 3 είναι η τιμή της μεταβλητής πλήθος· ζητείται το άθροισμα.' }],
+      hints: ['Το άθροισμα ξεκινά από 0 και σε κάθε πέρασμα προσθέτει την τρέχουσα τιμή x.', '0 + 6 + 8 + 5 = ;'],
+      solution: '0 + 6 + 8 + 5 = <b>19</b>.', ok: 'Δες τη 3η γραμμή του πίνακα εκτέλεσης.' }),
+    mcQ({ id: 'lab.a3', prompt: 'Ένας αλγόριθμος που βρίσκει τη <b>διάμεσο</b> πρέπει πρώτα να…', options: [
+      { t: 'ταξινομήσει τη λίστα σε αύξουσα σειρά', ok: true, why: 'Η διάμεσος ορίζεται στα ταξινομημένα δεδομένα· μετά μια συνθήκη (περιττό ή άρτιο πλήθος) επιλέγει τον σωστό τύπο.' },
+      { t: 'υπολογίσει τη μέση τιμή', why: 'Η διάμεσος δεν χρειάζεται τη μέση τιμή.' },
+      { t: 'βρει τη μεγαλύτερη τιμή', why: 'Το μέγιστο δεν αρκεί για να βρεθεί η μεσαία θέση.' },
+      { t: 'διαγράψει τις τιμές που επαναλαμβάνονται', why: 'Οι τιμές που επαναλαμβάνονται μετράνε κανονικά!' }] }));
+}
 function renderLab(view) {
   view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'),
-    el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('div', { class: 'kicker' }, 'Ελεύθερη εξερεύνηση · Πληροφορική & Στατιστική'), el('h1', { tabindex: '-1' }, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Φτιάξε δικά σου δεδομένα και δες ζωντανά πώς αλλάζουν τα μέτρα θέσης και διασποράς — και πώς υπολογίζονται σε υπολογιστικό φύλλο.'))));
+    el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('div', { class: 'kicker' }, 'Ελεύθερη εξερεύνηση · Πληροφορική & Στατιστική'), el('h1', { tabindex: '-1' }, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Φτιάξε δικά σου δεδομένα, δες ζωντανά πώς αλλάζουν τα μέτρα θέσης και διασποράς και ανακάλυψε πώς τα υπολογίζει ο υπολογιστής: σε υπολογιστικό φύλλο και με αλγόριθμο βήμα-βήμα.'))));
   let cnt = (Array.isArray(S.lab.cnt) && S.lab.cnt.length === 11) ? S.lab.cnt.slice() : [0, 0, 0, 0, 1, 1, 2, 1, 1, 0, 0], cur = 6;
   const W = 620, H = 330, Lp = 24, Rp = 24, T = 18, BASE = 262, colW = (W - Lp - Rp) / 11, STEP = 14.5, MAXS = 16;
   const X = v => Lp + (v + 0.5) * colW;
@@ -1183,7 +1260,7 @@ function renderLab(view) {
   const card4 = el('section', { class: 'card' }, el('h2', {}, '📥 Τα δικά μας δεδομένα'),
     el('p', { class: 'mut', html: 'Επικόλλησε τα <b>ανώνυμα</b> δεδομένα της τάξης (π.χ. ώρες στο διαδίκτυο την εβδομάδα). Χώρισε τις τιμές με κενό, <kbd>Enter</kbd> ή ερωτηματικό (;). Για δεκαδικά χρησιμοποίησε κόμμα ή τελεία. Τα δεδομένα δεν αποστέλλονται πουθενά.' }),
     ta, el('div', { class: 'row' }, anB), res);
-  view.append(card1, card3, card2, card4);
+  view.append(card1, card3, algCard(), card2, card4);
   changed(false);
 }
 
@@ -1260,7 +1337,7 @@ function renderHome(view) {
       el('a', { class: 'btn pri', href: '#' + M.id }, S.missions[M.id] ? 'Ξαναπαίξε' : started ? 'Συνέχισε ▸' : 'Ξεκίνα ▸')));
   });
   const labN = LAB_CH.filter(c => S.tasks[c.id]).length;
-  grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('span', { class: 'tag' }, 'Εργαστήριο')), el('h3', {}, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Φτιάξε δικά σου δεδομένα · Υπολογιστικό φύλλο · Δεδομένα της τάξης'), el('p', { class: 'small mut' }, `🏗️ Προκλήσεις: ${labN}/4`), el('div', { class: 'stars' }, ''), el('a', { class: 'btn pri', href: '#lab' }, 'Άνοιξε ▸')));
+  grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('span', { class: 'tag' }, 'Εργαστήριο')), el('h3', {}, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Δικά σου δεδομένα · Υπολογιστικό φύλλο · Αλγόριθμος βήμα-βήμα'), el('p', { class: 'small mut' }, `🏗️ Προκλήσεις: ${labN}/4 · 🤖 Αλγόριθμος: ${ALG_TASKS.filter(t => S.tasks[t]).length}/3`), el('div', { class: 'stars' }, ''), el('a', { class: 'btn pri', href: '#lab' }, 'Άνοιξε ▸')));
   grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, '🎓'), el('div', {}, el('span', { class: 'tag' }, 'Αξιολόγηση')), el('h3', {}, 'Τελικό κουίζ'), el('p', { class: 'mut' }, '10 ερωτήσεις από όλες τις αποστολές'), el('p', { class: 'small mut' }, S.quiz ? `🎯 Καλύτερο σκορ: ${S.quiz.best}/10` : '🎯 Δεν έχει δοθεί ακόμη'), el('div', { class: 'stars' }, ''), el('a', { class: 'btn pri', href: '#quiz' }, 'Ξεκίνα ▸')));
   view.append(el('h2', { class: 'sec' }, 'Χάρτης αποστολών'), el('p', { class: 'mut small' }, 'Προτεινόμενη σειρά: 1 → 2 → 3 → 4, μετά Εργαστήριο και Κουίζ. Η Αποστολή 5 είναι πρόκληση για όσους προχωρούν γρηγορότερα.'), grid,
     el('h2', { class: 'sec' }, 'Τα σήματά σου'), badgesRow());
@@ -1268,15 +1345,15 @@ function renderHome(view) {
 function renderReport(view) {
   view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'), el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '📋'), el('div', {}, el('div', { class: 'kicker' }, 'Για τον/την εκπαιδευτικό'), el('h1', { tabindex: '-1' }, 'Αναφορά προόδου'), el('p', { class: 'mut' }, 'Αντέγραψέ την για να την παραδώσεις (σε υπολογιστή εκτυπώνεται και με Ctrl+P).'))));
   const rows = Object.values(MIS).map(M => { const { got, max } = missionXP(M.id), st = stars(M.id); return [`${M.n}. ${M.title}`, S.missions[M.id] ? '✔️ Ολοκληρώθηκε' : (missionTasks(M.id).some(t => S.tasks[t]) ? '⏳ Σε εξέλιξη' : '—'), S.missions[M.id] ? starStr(st) : '', `${got}/${max}`]; });
-  const labN = LAB_CH.filter(c => S.tasks[c.id]).length, hints = Object.values(S.tasks).filter(t => t.how === 'revealed').length;
+  const labN = LAB_CH.filter(c => S.tasks[c.id]).length, algN = ALG_TASKS.filter(t => S.tasks[t]).length, hints = Object.values(S.tasks).filter(t => t.how === 'revealed').length;
   const t = el('table', { class: 'tbl rep' }, el('thead', {}, el('tr', {}, ...['Αποστολή', 'Κατάσταση', 'Αστέρια', 'XP'].map(h => el('th', { scope: 'col' }, h)))), el('tbody', {}, ...rows.map(r => el('tr', {}, el('th', { scope: 'row' }, r[0]), ...r.slice(1).map(c => el('td', {}, c))))));
   const quizTxt = S.quiz ? `${S.quiz.last}/10 (καλύτερο: ${S.quiz.best}/10)` : 'δεν έχει δοθεί';
   const date = new Date().toLocaleString('el-GR');
   const card = el('section', { class: 'card' },
     el('label', { class: 'nick' }, el('span', {}, 'Ψευδώνυμο:'), nickInput()),
-    el('p', {}, el('b', {}, 'Ημερομηνία: '), date, el('br'), el('b', {}, 'Σύνολο XP: '), `${S.xp} (${rank(S.xp)[1]})`, el('br'), el('b', {}, 'Εργαστήριο: '), `${labN}/4 προκλήσεις`, el('br'), el('b', {}, 'Κουίζ: '), quizTxt, el('br'), el('b', {}, 'Λύσεις που ζητήθηκαν: '), String(hints)),
+    el('p', {}, el('b', {}, 'Ημερομηνία: '), date, el('br'), el('b', {}, 'Σύνολο XP: '), `${S.xp} (${rank(S.xp)[1]})`, el('br'), el('b', {}, 'Εργαστήριο: '), `${labN}/4 προκλήσεις · αλγόριθμος ${algN}/3 ερωτήσεις`, el('br'), el('b', {}, 'Κουίζ: '), quizTxt, el('br'), el('b', {}, 'Λύσεις που ζητήθηκαν: '), String(hints)),
     el('div', { class: 'tblwrap' }, t), el('h2', { class: 'sec' }, 'Σήματα'), badgesRow());
-  const txt = () => ['Ντετέκτιβ Δεδομένων — Αναφορά προόδου', `Ψευδώνυμο: ${S.nick || '—'}`, `Ημερομηνία: ${date}`, `XP: ${S.xp} (${rank(S.xp)[1]})`, ...rows.map(r => `Αποστολή ${r[0]}: ${r[1]} ${r[2]} (${r[3]} XP)`), `Εργαστήριο: ${labN}/4 προκλήσεις`, `Κουίζ: ${quizTxt}`, `Λύσεις που ζητήθηκαν: ${hints}`, 'Σήματα: ' + (Object.keys(S.badges).map(k => BADGES[k].e + ' ' + BADGES[k].t).join(', ') || '—')].join('\n');
+  const txt = () => ['Ντετέκτιβ Δεδομένων — Αναφορά προόδου', `Ψευδώνυμο: ${S.nick || '—'}`, `Ημερομηνία: ${date}`, `XP: ${S.xp} (${rank(S.xp)[1]})`, ...rows.map(r => `Αποστολή ${r[0]}: ${r[1]} ${r[2]} (${r[3]} XP)`), `Εργαστήριο: ${labN}/4 προκλήσεις, αλγόριθμος ${algN}/3`, `Κουίζ: ${quizTxt}`, `Λύσεις που ζητήθηκαν: ${hints}`, 'Σήματα: ' + (Object.keys(S.badges).map(k => BADGES[k].e + ' ' + BADGES[k].t).join(', ') || '—')].join('\n');
   const rs = el('button', { class: 'btn danger', type: 'button' }, '🗑️ Μηδενισμός προόδου'); let armed = false;
   rs.onclick = () => { if (!armed) { armed = true; rs.textContent = '⚠️ Πάτησε ξανά για επιβεβαίωση'; setTimeout(() => { armed = false; rs.textContent = '🗑️ Μηδενισμός προόδου'; }, 4000); return; } const ui = S.ui; S = blank(); S.ui = ui; save(); updateHud(); toast('Η πρόοδος μηδενίστηκε.'); if (location.hash === '#home') route(); else location.hash = '#home'; };
   view.append(card, el('div', { class: 'row noprint' }, el('button', { class: 'btn pri', type: 'button', onclick: () => copyText(txt(), 'Η αναφορά αντιγράφηκε!') }, '📋 Αντιγραφή κειμένου'), rs));
@@ -1286,8 +1363,8 @@ function renderGuide(view) {
   const tch = el('input', { type: 'checkbox', id: 'tmode' }); tch.checked = TEACHER;
   tch.addEventListener('change', () => { S.ui.teacher = tch.checked; TEACHER = tch.checked; save(); toast(TEACHER ? 'Λειτουργία εκπαιδευτικού: ενεργή' : 'Λειτουργία εκπαιδευτικού: ανενεργή'); });
   view.append(
-    el('section', { class: 'card guide-sec', html: '<h2>🎮 Για μαθητές</h2><ul><li>Διάλεξε μια <b>αποστολή</b> από τον χάρτη. Κάθε αποστολή έχει βήματα που ξεκλειδώνουν το ένα μετά το άλλο.</li><li>Γράφεις αριθμούς με <b>κόμμα ή τελεία</b> (6,05 ή 6.05). Πατάς <kbd>Enter</kbd> ή «Έλεγχος».</li><li>Μετά από κάθε απάντηση παίρνεις <b>άμεση ανατροφοδότηση</b> που εξηγεί το πιθανό λάθος. Η «💡 Υπόδειξη» βοηθά, αλλά μειώνει λίγο τους πόντους. Μετά από 2 λάθη εμφανίζεται η «👁️ Λύση».</li><li>Μαζεύεις <b>XP</b>, <b>αστέρια</b> και <b>σήματα</b>. Η πρόοδος αποθηκεύεται μόνο σε αυτόν τον υπολογιστή/φυλλομετρητή.</li><li>Στο <b>Εργαστήριο</b> φτιάχνεις δικά σου δεδομένα και βλέπεις τα ίδια μέτρα με συναρτήσεις υπολογιστικού φύλλου.</li></ul>' }),
-    el('section', { class: 'card guide-sec', html: '<h2>👩‍🏫 Για εκπαιδευτικούς</h2><p>Προτεινόμενη ροή (3 διδακτικές ώρες, εργασία σε ζεύγη):</p><div class="tblwrap"><table class="tbl rep"><thead><tr><th scope="col">Ώρα</th><th scope="col">Δραστηριότητα</th><th scope="col">Στόχοι σεναρίου</th></tr></thead><tbody><tr><th scope="row">1η</th><td>Αποστολές 1–2: πίνακας συχνοτήτων, μέση τιμή, διάμεσος, επικρατούσα τιμή</td><td>Στόχοι 1–3 (οργάνωση, υπολογισμός, ερμηνεία)</td></tr><tr><th scope="row">2η</th><td>Αποστολές 3–4: ομαδοποιημένα δεδομένα, ιστόγραμμα, πολύγωνα, εκατοστιαία σημεία</td><td>Στόχοι 1–2 (αναπαράσταση, μέτρα θέσης σε κλάσεις)</td></tr><tr><th scope="row">3η</th><td>Εργαστήριο & υπολογιστικό φύλλο με δεδομένα της τάξης, κουίζ, αναστοχασμός</td><td>Στόχοι 2–3 (μεταφορά σε νέα, αυθεντικά δεδομένα)</td></tr><tr><th scope="row">Επέκταση</th><td>Αποστολή 5 (★): διακύμανση, τυπική απόκλιση, CV</td><td>Πέρα από τους στόχους (διασπορά)</td></tr></tbody></table></div><p>Η σελίδα <b>Αναφορά</b> συνοψίζει την πρόοδο κάθε μαθητή (XP, αστέρια, σκορ κουίζ, λύσεις που ζητήθηκαν) και αντιγράφεται για το eclass (σε υπολογιστή εκτυπώνεται και με Ctrl+P).</p>' }),
+    el('section', { class: 'card guide-sec', html: '<h2>🎮 Για μαθητές</h2><ul><li>Διάλεξε μια <b>αποστολή</b> από τον χάρτη. Κάθε αποστολή έχει βήματα που ξεκλειδώνουν το ένα μετά το άλλο.</li><li>Γράφεις αριθμούς με <b>κόμμα ή τελεία</b> (6,05 ή 6.05). Πατάς <kbd>Enter</kbd> ή «Έλεγχος».</li><li>Μετά από κάθε απάντηση παίρνεις <b>άμεση ανατροφοδότηση</b> που εξηγεί το πιθανό λάθος. Η «💡 Υπόδειξη» βοηθά, αλλά μειώνει λίγο τους πόντους. Μετά από 2 λάθη εμφανίζεται η «👁️ Λύση».</li><li>Μαζεύεις <b>XP</b>, <b>αστέρια</b> και <b>σήματα</b>. Η πρόοδος αποθηκεύεται μόνο σε αυτόν τον υπολογιστή/φυλλομετρητή.</li><li>Στο <b>Εργαστήριο</b> φτιάχνεις δικά σου δεδομένα, βλέπεις τα ίδια μέτρα με συναρτήσεις υπολογιστικού φύλλου και εκτελείς βήμα-βήμα τον αλγόριθμο που τα υπολογίζει.</li></ul>' }),
+    el('section', { class: 'card guide-sec', html: '<h2>👩‍🏫 Για εκπαιδευτικούς</h2><p>Προτεινόμενη ροή (3 διδακτικές ώρες, εργασία σε ζεύγη):</p><div class="tblwrap"><table class="tbl rep"><thead><tr><th scope="col">Ώρα</th><th scope="col">Δραστηριότητα</th><th scope="col">Στόχοι σεναρίου</th></tr></thead><tbody><tr><th scope="row">1η</th><td>Αποστολές 1–2: πίνακας συχνοτήτων, μέση τιμή, διάμεσος, επικρατούσα τιμή</td><td>Στόχοι 1–3 (οργάνωση, υπολογισμός, ερμηνεία)</td></tr><tr><th scope="row">2η</th><td>Αποστολές 3–4: ομαδοποιημένα δεδομένα, ιστόγραμμα, πολύγωνα, εκατοστιαία σημεία</td><td>Στόχοι 1–2 (αναπαράσταση, μέτρα θέσης σε κλάσεις)</td></tr><tr><th scope="row">3η</th><td>Εργαστήριο: αλγόριθμος βήμα-βήμα, υπολογιστικό φύλλο με δεδομένα της τάξης· κουίζ, αναστοχασμός</td><td>Στόχοι 2–3 (μεταφορά σε νέα, αυθεντικά δεδομένα)</td></tr><tr><th scope="row">Επέκταση</th><td>Αποστολή 5 (★): διακύμανση, τυπική απόκλιση, CV</td><td>Πέρα από τους στόχους (διασπορά)</td></tr></tbody></table></div><p>Η σελίδα <b>Αναφορά</b> συνοψίζει την πρόοδο κάθε μαθητή (XP, αστέρια, σκορ κουίζ, λύσεις που ζητήθηκαν) και αντιγράφεται για το eclass (σε υπολογιστή εκτυπώνεται και με Ctrl+P).</p>' }),
     el('section', { class: 'card guide-sec' }, el('h2', {}, '🧑‍🏫 Λειτουργία εκπαιδευτικού'), el('label', { class: 'row', for: 'tmode' }, tch, el('span', {}, 'Εμφάνιση του κουμπιού «👁️ Λύση» σε όλες τις ερωτήσεις (π.χ. για συζήτηση στην ολομέλεια με βιντεοπροβολέα).'))),
     el('section', { class: 'card guide-sec', html: '<h2>♿ Προσβασιμότητα</h2><ul><li>Όλα τα στοιχεία λειτουργούν και με πληκτρολόγιο (<kbd>Tab</kbd>, βελάκια, <kbd>Enter</kbd>).</li><li>Κουμπί <b>A+</b>: μεγαλύτερα γράμματα · κουμπί <b>🌓</b>: φωτεινό/σκοτεινό θέμα.</li><li>Η ανατροφοδότηση ανακοινώνεται σε αναγνώστες οθόνης· τα γραφήματα έχουν εναλλακτικό κείμενο.</li><li>Σεβόμαστε τη ρύθμιση «λιγότερη κίνηση» του λειτουργικού συστήματος.</li></ul>' }),
     el('section', { class: 'card guide-sec', html: '<h2>🔒 Ιδιωτικότητα</h2><p>Το υλικό είναι ένα αυτόνομο αρχείο HTML: δεν χρειάζεται λογαριασμό, δεν συλλέγει προσωπικά δεδομένα και δεν στέλνει τίποτα στο διαδίκτυο. Η πρόοδος αποθηκεύεται τοπικά στον φυλλομετρητή (localStorage). Χρησιμοποιείτε <b>ψευδώνυμα</b>, όχι ονόματα.</p>' }),
