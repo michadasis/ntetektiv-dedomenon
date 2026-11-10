@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ντετέκτιβ Δεδομένων</title>
+<meta name="description" content="Ψηφιακό παιχνίδι-εργαστήριο περιγραφικής στατιστικής: πίνακας συχνοτήτων, μέση τιμή, διάμεσος, επικρατούσα τιμή, ιστόγραμμα, εκατοστιαία σημεία, διασπορά.">
+<style>
+:root{
+  --bg:#f3f5fb;--bg2:#e8ecf7;--card:#ffffff;--ink:#1c2240;--mut:#545c7c;--line:#d3d9ea;
+  --pri:#3243c4;--pri-ink:#ffffff;--pri-soft:#e2e6fb;
+  --acc:#d9820a;--acc-soft:#fff0d6;
+  --ok:#11804a;--ok-soft:#dff4e8;--bad:#c2322a;--bad-soft:#fde6e3;
+  --hl:#ffd54a;--bar:#5869df;--grid:#e3e7f1;
+  --shadow:0 6px 20px rgba(28,35,80,.08);--r:16px;--fs:17px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10132a;--bg2:#1a1f3d;--card:#1c2145;--ink:#eef0fb;--mut:#aab1d3;--line:#353c6c;
+  --pri:#8d9dff;--pri-ink:#0f1330;--pri-soft:#2a3172;--acc:#ffb547;--acc-soft:#3b2f17;
+  --ok:#5fd394;--ok-soft:#143826;--bad:#ff8a80;--bad-soft:#47201d;--hl:#e0b53a;--bar:#8d9dff;--grid:#2b3160;
+  --shadow:0 6px 20px rgba(0,0,0,.35);color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#10132a;--bg2:#1a1f3d;--card:#1c2145;--ink:#eef0fb;--mut:#aab1d3;--line:#353c6c;
+  --pri:#8d9dff;--pri-ink:#0f1330;--pri-soft:#2a3172;--acc:#ffb547;--acc-soft:#3b2f17;
+  --ok:#5fd394;--ok-soft:#143826;--bad:#ff8a80;--bad-soft:#47201d;--hl:#e0b53a;--bar:#8d9dff;--grid:#2b3160;
+  --shadow:0 6px 20px rgba(0,0,0,.35);color-scheme:dark;}
+html.big{--fs:20px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:var(--fs)}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--pri)}
+h1,h2,h3{line-height:1.25}
+code{font-family:ui-monospace,Consolas,"Courier New",monospace;background:var(--bg2);padding:1px 5px;border-radius:6px;font-size:.88em}
+kbd{font-family:ui-monospace,Consolas,monospace;font-size:.85em;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 5px;background:var(--bg2)}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:16px;top:8px;z-index:100;background:var(--card);padding:8px 12px;border-radius:8px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--card);border-bottom:1px solid var(--line)}
+.top-in{max-width:1060px;margin:0 auto;padding:8px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.brand{font-weight:800;font-size:1.08rem;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+nav.main{display:flex;flex-wrap:wrap;gap:2px}
+nav.main a{padding:7px 10px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:600;font-size:.92rem}
+nav.main a:hover{background:var(--bg2)}
+nav.main a[aria-current="page"]{background:var(--pri-soft);color:var(--pri)}
+.hud{display:flex;gap:6px;align-items:center}
+.pill{background:var(--pri-soft);color:var(--pri);border-radius:99px;padding:6px 12px;font-weight:800;font-size:.88rem;white-space:nowrap}
+.icon{min-width:44px;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}
+.icon[aria-pressed="true"]{background:var(--pri-soft);color:var(--pri)}
+main{max-width:1060px;margin:0 auto;padding:12px 16px 40px;outline:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:14px 0;box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:700;border-radius:12px;border:2px solid var(--pri);background:var(--card);color:var(--pri);padding:8px 14px;min-height:44px;cursor:pointer;text-decoration:none;line-height:1.2}
+.btn.pri{background:var(--pri);color:var(--pri-ink)}
+.btn.ghost{border-color:var(--line);color:var(--ink)}
+.btn.acc{border-color:var(--acc);background:var(--acc);color:#1c2240}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.mini{min-height:32px;padding:2px 8px;font-size:.78rem;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:hover:not(:disabled){filter:brightness(1.06)}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.mut{color:var(--mut)}.small{font-size:.86rem}
+.back{display:inline-block;margin:6px 0 4px;font-weight:600;text-decoration:none}
+.mhead{display:flex;gap:14px;align-items:center;margin:4px 0 6px}
+.memo{font-size:3rem;line-height:1}
+.kicker{font-size:.78rem;font-weight:800;color:var(--pri);text-transform:uppercase;letter-spacing:.04em}
+h1{margin:0;font-size:1.7rem}
+.mhead p{margin:2px 0 0}
+.steps-prog{display:flex;gap:6px;margin:10px 0 0;flex-wrap:wrap}
+.sp{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--bg2);color:var(--mut);font-weight:800;font-size:.85rem}
+.sp.on{background:var(--pri-soft);color:var(--pri)}
+.sp.ok{background:var(--ok);color:#fff}
+.step h2{font-size:1.22rem;margin:0 0 12px}
+.stepn{display:inline-block;background:var(--pri);color:var(--pri-ink);border-radius:8px;padding:1px 8px;font-size:.78rem;vertical-align:middle;margin-right:4px}
+.next{margin-top:16px}
+.story{background:var(--bg2);border-left:5px solid var(--acc);border-radius:12px;padding:10px 14px;margin:0 0 14px}
+.tip{background:var(--acc-soft);border-radius:12px;padding:10px 14px;margin:12px 0}
+.formula{background:var(--pri-soft);border-radius:12px;padding:10px 14px;margin:14px 0;line-height:1.75}
+.hint{background:var(--acc-soft);border-radius:10px;padding:8px 12px;margin:8px 0 0}
+.q{border-left:4px solid var(--line);padding:4px 0 6px 14px;margin:18px 0}
+.q.correct{border-left-color:var(--ok)}
+.q.revealed{border-left-color:var(--acc)}
+.q-p{margin-bottom:8px}
+.q-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.unit{font-weight:800}
+input.num,input.txt{font:inherit;width:8.5em;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:44px}
+input.txt{width:14em}
+input.num:disabled{opacity:1;-webkit-text-fill-color:var(--ink)}
+.fb{min-height:.5em}
+.say{padding:9px 12px;border-radius:12px;margin-top:8px;border-left:4px solid var(--line);background:var(--bg2)}
+.say.ok{background:var(--ok-soft);border-left-color:var(--ok)}
+.say.bad{background:var(--bad-soft);border-left-color:var(--bad)}
+.say.warn,.say.info{background:var(--acc-soft);border-left-color:var(--acc)}
+.xpt{color:var(--pri);white-space:nowrap}
+.mc{display:grid;gap:6px}
+.opt{display:block;width:100%;text-align:left;font:inherit;padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;min-height:44px}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.opt:disabled:not(.ok):not(.bad){opacity:.6}
+.tblwrap{overflow-x:auto;max-width:100%}
+.tbl{border-collapse:collapse;margin:6px 0}
+.tbl th,.tbl td{border:1px solid var(--line);padding:6px 10px;text-align:center}
+.tbl thead th{background:var(--pri-soft)}
+.tbl tbody th{background:var(--bg2)}
+.tbl tr.tot{font-weight:800}
+.tbl.compact th,.tbl.compact td{padding:4px 7px;font-size:.9rem;white-space:nowrap}
+.thbtns{display:flex;gap:4px;justify-content:center;margin-top:4px}
+.cell{font:inherit;width:4.8em;padding:5px 6px;text-align:center;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.cell.ok{border-color:var(--ok);background:var(--ok-soft)}
+.cell.bad{border-color:var(--bad);background:var(--bad-soft)}
+.cell:disabled{opacity:1;-webkit-text-fill-color:var(--ink)}
+td.reveal{color:var(--mut)}
+td.shown{color:var(--ink);font-weight:700;animation:pop .45s}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px}
+.chip{min-width:44px;min-height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--hl);border-color:var(--acc);color:#1c2240}
+.tiles{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;max-width:520px}
+.tile{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;background:var(--bg2);border:2px solid var(--line);font:inherit;font-weight:800;font-size:1.02rem;color:var(--ink);user-select:none;position:relative;padding:0}
+button.tile{cursor:pointer}
+.tile.lit{background:var(--hl);border-color:var(--acc);color:#1c2240}
+.tile.marked::after{content:"✓";position:absolute;top:-7px;right:-5px;font-size:.7rem;background:var(--ok);color:#fff;border-radius:50%;width:18px;height:18px;display:grid;place-items:center}
+.tile.nope{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.tiles.sorted .tile::before{content:attr(data-pos);position:absolute;bottom:0;right:4px;font-size:.58rem;color:var(--mut);font-weight:600}
+.tile.mid{background:var(--acc);border-color:var(--acc);color:#1c2240}
+.tile.mid::before{color:#1c2240!important}
+.counter{min-height:1.6em;margin:8px 0}
+.chartbox{max-width:680px}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{fill:var(--mut);font-size:13px;font-family:inherit}
+.chart .lbl{fill:var(--ink);font-weight:700}
+.chart .axl{fill:var(--mut);font-size:12px}
+.chart .axis{stroke:var(--mut);stroke-width:1.5}
+.chart .grid{stroke:var(--grid);stroke-width:1}
+.chart .bar{fill:var(--bar)}
+.chart .bar.hl{fill:var(--acc)}
+.chart .bar.ok{fill:var(--ok)}
+.chart .hb{stroke:var(--card);stroke-width:2}
+.builder{touch-action:none;cursor:pointer}
+.builder .bar:focus{outline:none;stroke:var(--acc);stroke-width:4}
+.chart .poly{fill:none;stroke:var(--acc);stroke-width:3.5;stroke-linejoin:round}
+.chart .pdot{fill:var(--acc)}
+.chart .ogive{fill:none;stroke:var(--pri);stroke-width:3}
+.chart .dot{fill:var(--pri)}
+.chart .dot.mode{fill:var(--acc)}
+.chart .guide{stroke:var(--acc);stroke-width:2;stroke-dasharray:6 5}
+.chart .gdot{fill:var(--acc)}
+.chart .cline{stroke:var(--bad);stroke-width:2.2}
+.cons,.devs{transition:opacity .4s}
+.devs .dpos{stroke:var(--ok);stroke-width:3}
+.devs .dneg{stroke:var(--bad);stroke-width:3}
+.chart .meanline{stroke:var(--acc);stroke-width:2;stroke-dasharray:5 4}
+.bal{touch-action:none;cursor:ew-resize}
+.bal .beam{fill:var(--ink)}
+.bal .fulcrum{fill:var(--acc)}
+.balmsg{font-weight:600;min-height:1.6em}
+.balmsg.ok{color:var(--ok)}
+.rng{display:flex;align-items:center;gap:10px;margin:8px 0;font-weight:600}
+.rng span{white-space:nowrap;min-width:7.5em}
+input[type=range]{width:100%;accent-color:var(--pri);min-height:32px}
+.rngs{max-width:680px}
+.readout{font-weight:600}
+.lab{touch-action:manipulation;cursor:pointer}
+.lab .curcol{fill:var(--pri-soft)}
+.lab .medline{stroke:var(--ok);stroke-width:2;stroke-dasharray:4 4}
+.lab .medlbl{fill:var(--ok);font-weight:800}
+.lab .meantri{fill:var(--acc)}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;margin:10px 0}
+.stat{background:var(--bg2);border-radius:12px;padding:8px 10px}
+.stat span{display:block;font-size:.78rem;color:var(--mut)}
+.stat b{font-size:1.2rem}
+.ss{font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:.84rem}
+.sscols{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,2fr);gap:12px;align-items:start}
+.ss table{border-collapse:collapse;width:100%}
+.ss td,.ss th{border:1px solid var(--line);padding:4px 7px;text-align:left;vertical-align:top}
+.ss th{background:var(--bg2);color:var(--mut);font-weight:600;text-align:center}
+.ss code{background:none;padding:0;color:var(--pri);word-break:break-all}
+.ss .ftw{overflow-x:auto;max-width:100%}
+.ss .val{font-weight:700;white-space:nowrap}
+.chl{list-style:none;padding:0;margin:8px 0}
+.chl li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line)}
+.chl .st{font-size:1.2rem;line-height:1.2}
+textarea{font:inherit;width:100%;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:center}
+.hero h1{font-size:2.1rem;margin:2px 0 6px}
+.nick{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-weight:600;font-size:.92rem}
+.rankbox{background:var(--bg2);border-radius:14px;padding:14px;text-align:center}
+.rk{font-weight:800;color:var(--pri)}
+.xpbig{font-size:2rem;font-weight:800}
+.xpbar{height:12px;background:var(--card);border-radius:99px;overflow:hidden;margin:6px 0}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--acc))}
+h2.sec{font-size:1.25rem;margin:22px 0 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px}
+.grid .card{margin:0}
+.mcard{display:flex;flex-direction:column;gap:6px}
+.mcard h3{margin:2px 0 0;font-size:1.1rem}
+.mcard p{margin:0}
+.mcard .btn{margin-top:auto;align-self:flex-start}
+.mcard .em{font-size:2.3rem;line-height:1}
+.tag{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--pri-soft);color:var(--pri)}
+.tag.ch{background:var(--acc-soft);color:var(--ink)}
+.stars{color:var(--acc);font-size:1.25rem;letter-spacing:2px;min-height:1.5em}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{display:flex;flex-direction:column;align-items:center;width:104px;text-align:center;font-size:.78rem;gap:4px}
+.badge .ic{font-size:1.9rem;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--acc-soft);border:2px solid var(--acc)}
+.badge.off{opacity:.45}
+.badge.off .ic{filter:grayscale(1);border-color:var(--line);background:var(--bg2)}
+.done{text-align:center}
+.big-stars{font-size:2.6rem;color:var(--acc);letter-spacing:6px}
+.rep td,.rep th{text-align:left}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,calc(100% + 40px));opacity:0;visibility:hidden;background:var(--ink);color:var(--card);padding:10px 18px;border-radius:99px;font-weight:700;box-shadow:var(--shadow);transition:transform .3s,opacity .3s,visibility .3s;z-index:50;max-width:calc(100vw - 32px);text-align:center}
+#toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
+#cf{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:40}
+#cf span{position:absolute;top:-40px;font-size:26px;animation:fall 2.2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+.guide-sec h2{font-size:1.2rem;margin-top:0}
+.guide-sec li{margin:4px 0}
+@media (max-width:760px){
+  .two,.hero,.sscols{grid-template-columns:minmax(0,1fr)}
+  nav.main{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto}
+  .card{padding:14px}
+  h1{font-size:1.45rem}.hero h1{font-size:1.7rem}
+  .memo{font-size:2.4rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{
+  header.top,.noprint,button,.back,#toast,#cf{display:none!important}
+  body{background:#fff;color:#000}
+  .card{box-shadow:none;border:1px solid #999;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#view">Μετάβαση στο περιεχόμενο</a>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#home"><span aria-hidden="true">🔍</span> Ντετέκτιβ Δεδομένων</a>
+    <nav class="main" aria-label="Κύρια πλοήγηση">
+      <a href="#home" data-r="home">Χάρτης</a>
+      <a href="#lab" data-r="lab">Εργαστήριο</a>
+      <a href="#quiz" data-r="quiz">Κουίζ</a>
+      <a href="#report" data-r="report">Αναφορά</a>
+      <a href="#guide" data-r="guide">Οδηγός</a>
+    </nav>
+    <div class="hud">
+      <span class="pill" id="xpPill" title="Πόντοι εμπειρίας (XP)">⭐ 0 XP</span>
+      <button class="icon" id="btnBig" type="button" aria-pressed="false" title="Μεγάλα γράμματα">A+</button>
+      <button class="icon" id="btnTheme" type="button" title="Φωτεινό / σκοτεινό θέμα" aria-label="Εναλλαγή φωτεινού/σκοτεινού θέματος">🌓</button>
+    </div>
+  </div>
+</header>
+<main id="view" tabindex="-1"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="cf" aria-hidden="true"></div>
+<noscript><p style="padding:16px">Για να λειτουργήσει το υλικό χρειάζεται ενεργοποιημένη JavaScript.</p></noscript>
+<script>
+'use strict';
+/* =====================================================================
+   Ντετέκτιβ Δεδομένων — ψηφιακό υλικό περιγραφικής στατιστικής (CS148)
+   Αυτόνομο αρχείο HTML: δεν χρειάζεται εγκατάσταση ούτε σύνδεση.
+   Τα δεδομένα των αποστολών προέρχονται από την «Εργασία 1» του μαθήματος
+   Πιθανότητες–Στατιστική (Τμήμα Πληροφορικής, Πανεπιστήμιο Δυτ. Μακεδονίας).
+   ===================================================================== */
+const AUTHOR = 'Ιωάννης Μιχαδάσης';
+const KEY = 'ntetektiv-dedomenon-v1';
+const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ---------- βοηθητικά ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const sum = a => a.reduce((s, x) => s + x, 0);
+const mean = a => a.length ? sum(a) / a.length : NaN;
+function cumsum(a) { let s = 0; return a.map(x => (s += x)); }
+function median(a) { const s = [...a].sort((x, y) => x - y), n = s.length; if (!n) return NaN; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; }
+function modes(a) {
+  if (!a.length) return [];
+  const m = new Map(); a.forEach(x => m.set(x, (m.get(x) || 0) + 1));
+  const fr = [...m.values()], mx = Math.max(...fr);
+  if (m.size > 1 && fr.every(v => v === mx)) return [];
+  return [...m.keys()].filter(k => m.get(k) === mx).sort((x, y) => x - y);
+}
+function excelMode(a) { const m = new Map(); let best = null, bf = 1; a.forEach(x => { const c = (m.get(x) || 0) + 1; m.set(x, c); if (c > bf) { bf = c; best = x; } }); if (best === null) return null; for (const x of a) if (m.get(x) === bf) return x; return best; }
+function variance(a, sample = true) { const n = a.length; if (n < 2) return NaN; const m = mean(a); return sum(a.map(x => (x - m) ** 2)) / (sample ? n - 1 : n); }
+function gPct(cls, f, p) { const n = sum(f), pos = p / 100 * n; let F = 0; for (let i = 0; i < f.length; i++) { if (F + f[i] >= pos && f[i] > 0) { const [L, U] = cls[i]; return L + (pos - F) / f[i] * (U - L); } F += f[i]; } return cls[cls.length - 1][1]; }
+function gCdf(cls, f, x) { const n = sum(f); let F = 0; if (x <= cls[0][0]) return 0; for (let i = 0; i < f.length; i++) { const [L, U] = cls[i]; if (x < U) return (F + (x - L) / (U - L) * f[i]) / n * 100; F += f[i]; } return 100; }
+function fmt(x, d = 2) {
+  if (typeof x !== 'number' || !isFinite(x)) return '—';
+  let s = (Math.round(x * 10 ** d) / 10 ** d).toFixed(d);
+  if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  if (s === '-0') s = '0';
+  return s.replace('.', ',').replace(/^-/, '−');
+}
+function parseNum(str) {
+  if (str == null) return NaN;
+  const s = String(str).trim().replace(/\s+/g, '').replace(/%$/, '').replace(/[−–]/g, '-').replace(/,/g, '.');
+  if (!s) return NaN;
+  const fr = s.match(/^(-?\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/);
+  if (fr) { const b = parseFloat(fr[2]); return b ? parseFloat(fr[1]) / b : NaN; }
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+function el(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
+    else if (k === 'style') e.style.cssText = v;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+const NS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, ...kids) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) if (v != null) e.setAttribute(k, v);
+  for (const c of kids.flat()) { if (c == null) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+function svgPt(svg, e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(arr, rnd = Math.random) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+function say(fb, kind, html) { fb.innerHTML = ''; fb.append(el('div', { class: 'say ' + kind, html })); }
+const story = html => el('div', { class: 'story', html });
+let toastT;
+function toast(msg, ms = 2200) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+function confetti() {
+  if (RM) return;
+  const c = $('#cf'), em = ['🎉', '⭐', '📊', '🔍', '✨'];
+  for (let i = 0; i < 26; i++) { const s = el('span', {}, em[i % em.length]); s.style.left = (Math.random() * 100) + 'vw'; s.style.animationDelay = (Math.random() * .5) + 's'; c.append(s); setTimeout(() => s.remove(), 2900); }
+}
+function copyText(txt, okMsg) {
+  const done = () => toast(okMsg || 'Αντιγράφηκε!');
+  function fallback() {
+    const ta = el('textarea', { style: 'position:fixed;left:-9999px;top:0' }); ta.value = txt; document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('Δεν έγινε αντιγραφή — επίλεξε και αντίγραψε χειροκίνητα.'); }
+    ta.remove();
+  }
+  try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(txt).then(done, fallback); return; } } catch (e) { }
+  fallback();
+}
+
+/* ---------- δεδομένα (Εργασία 1, Πιθανότητες–Στατιστική) ---------- */
+const GRADES = [3,3,3,3,3,3,4,4,4,5, 5,5,5,5,5,5,5,5,5,5, 5,6,6,6,6,6,6,6,6,6, 6,6,6,6,6,6,7,7,7,7, 7,7,7,7,7,7,7,7,8,8, 8,8,8,8,8,8,8,9,9,9];
+const XV = [3, 4, 5, 6, 7, 8, 9];
+const NU = XV.map(x => GRADES.filter(g => g === x).length);   // 6,3,12,15,12,9,3
+const FP = NU.map(v => v / 60 * 100);
+const CN = cumsum(NU);
+const CF = CN.map(v => v / 60 * 100);
+const MUS = { cls: [[0, 2], [2, 4], [4, 6], [6, 8], [8, 10]], f: [8, 12, 10, 6, 4] };
+const NET = { cls: [[2, 4], [4, 6], [6, 8], [8, 10], [10, 12], [12, 14], [14, 16]], f: [4, 6, 8, 12, 9, 7, 4] };
+const SHUF = shuffle(GRADES.map((g, i) => ({ g, i })), mulberry32(148)); // i = θέση στην ταξινομημένη σειρά
+const CLA = [5, 5, 6, 6, 6, 6, 6, 6, 7, 7], CLB = [2, 3, 4, 5, 6, 6, 7, 8, 9, 10];
+
+/* ---------- κατάσταση & πρόοδος (μόνο στον φυλλομετρητή) ---------- */
+function blank() { return { v: 1, xp: 0, tasks: {}, unlock: {}, missions: {}, badges: {}, quiz: null, quizRun: null, lab: {}, nick: '', ui: {}, started: Date.now() }; }
+function load() { try { const raw = localStorage.getItem(KEY); if (raw) { const o = JSON.parse(raw); if (o && o.v === 1) return Object.assign(blank(), o); } } catch (e) { } return blank(); }
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+let TEACHER = /[?&]teacher=1\b/.test(location.search) || !!S.ui.teacher;
+
+const RANKS = [[0, 'Δόκιμος'], [80, 'Βοηθός ερευνητή'], [180, 'Ντετέκτιβ'], [300, 'Επιθεωρητής'], [420, 'Αρχιντετέκτιβ']];
+const rank = x => RANKS.filter(k => x >= k[0]).pop();
+const nextRank = x => RANKS.find(k => k[0] > x) || null;
+function updateHud() { const p = $('#xpPill'); if (p) p.textContent = `⭐ ${S.xp} XP · ${rank(S.xp)[1]}`; }
+
+const BADGES = {
+  m1: { e: '🧮', t: 'Καταμετρητής', d: 'Αποστολή 1' }, m2: { e: '⚖️', t: 'Κεντρικός ντετέκτιβ', d: 'Αποστολή 2' },
+  m3: { e: '🏛️', t: 'Επιμελητής μουσείου', d: 'Αποστολή 3' }, m4: { e: '💻', t: 'Ψηφιακός αναλυτής', d: 'Αποστολή 4' },
+  m5: { e: '📏', t: 'Μετρητής διασποράς', d: 'Αποστολή 5' }, lab: { e: '🏗️', t: 'Αρχιτέκτονας δεδομένων', d: '3 προκλήσεις εργαστηρίου' },
+  quiz: { e: '🎓', t: 'Πτυχιούχος ντετέκτιβ', d: '8/10 στο κουίζ' }
+};
+function giveBadge(id) { if (S.badges[id]) return; S.badges[id] = Date.now(); save(); setTimeout(() => toast(`🏅 Νέο σήμα: ${BADGES[id].e} ${BADGES[id].t}`, 3200), 700); confetti(); updateHud(); }
+
+let GATES = [];
+function gate(ids, cb) { const g = () => { if (ids.every(id => S.tasks[id])) { GATES = GATES.filter(x => x !== g); cb(); return true; } return false; }; if (!g()) GATES.push(g); }
+function runGates() { GATES.slice().forEach(g => g()); }
+function finish(id, xp, how) {
+  if (S.tasks[id]) return false;
+  xp = Math.max(0, xp | 0);
+  S.tasks[id] = { xp, how: how || 'ok', t: Date.now() }; S.xp += xp; save(); updateHud();
+  if (xp > 0) toast(`+${xp} XP`);
+  runGates(); return true;
+}
+
+/* ---------- ερωτήσεις ---------- */
+function numQ(o) {
+  const id = o.id, done = S.tasks[id];
+  const w = el('div', { class: 'q', 'data-q': id });
+  w.append(el('div', { class: 'q-p', html: o.prompt }));
+  const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', spellcheck: 'false', 'aria-label': o.aria || 'Η απάντησή σου' });
+  const bC = el('button', { class: 'btn pri', type: 'button' }, 'Έλεγχος');
+  const bH = el('button', { class: 'btn ghost', type: 'button' }, '💡 Υπόδειξη');
+  const bS = el('button', { class: 'btn ghost', type: 'button', hidden: !TEACHER }, '👁️ Λύση');
+  const fb = el('div', { class: 'fb', 'aria-live': 'polite' });
+  w.append(el('div', { class: 'q-row' }, inp, o.unit ? el('span', { class: 'unit' }, o.unit) : null, bC, bH, bS), fb);
+  const hints = o.hints || []; let wrong = 0, used = 0;
+  if (!hints.length) bH.hidden = true;
+  const shown = () => o.show || fmt(o.answer, o.dec ?? 2);
+  function lock(how) { inp.disabled = bC.disabled = true; bH.hidden = true; bS.hidden = true; w.classList.add(how === 'revealed' ? 'revealed' : 'correct'); }
+  function check() {
+    if (S.tasks[id]) return;
+    const v = parseNum(inp.value);
+    if (isNaN(v)) { say(fb, 'warn', 'Γράψε έναν αριθμό, π.χ. <b>6,05</b> ή <b>6.05</b>.'); inp.focus(); return; }
+    const tol = o.tol ?? 0.005;
+    let acc = null;
+    if (Math.abs(v - o.answer) <= tol + 1e-9) acc = o.ok || '';
+    else for (const a of o.alt || []) if (a.accept && Math.abs(v - a.v) <= (a.tol ?? tol) + 1e-9) { acc = a.msg; break; }
+    if (acc !== null) {
+      const xp = Math.max(4, (o.xp || 10) - 3 * used - 2 * wrong);
+      finish(id, xp, 'ok'); lock('ok');
+      say(fb, 'ok', `✔️ <b>Σωστά!</b> ${acc} <b class="xpt">+${xp} XP</b>`);
+      if (o.onDone) o.onDone(v); return;
+    }
+    wrong++;
+    let msg = null;
+    for (const a of o.alt || []) if (!a.accept && Math.abs(v - a.v) <= (a.tol ?? tol) + 1e-9) { msg = a.msg; break; }
+    say(fb, 'bad', '✖️ ' + (msg || ('Όχι ακόμη. Ξαναδοκίμασε' + (used < hints.length ? ' ή ζήτησε υπόδειξη.' : '.'))));
+    if (wrong >= 2) bS.hidden = false;
+    inp.select();
+  }
+  bC.onclick = check;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); check(); } });
+  bH.onclick = () => { if (used < hints.length) { w.insertBefore(el('div', { class: 'hint', html: '💡 ' + hints[used] }), fb); used++; if (used >= hints.length) bH.disabled = true; } };
+  bS.onclick = () => { if (S.tasks[id]) return; inp.value = shown(); finish(id, 0, 'revealed'); lock('revealed'); say(fb, 'info', '📘 <b>Λύση:</b> ' + o.solution); if (o.onDone) o.onDone(null); };
+  if (done) {
+    inp.value = shown(); lock(done.how);
+    say(fb, done.how === 'revealed' ? 'info' : 'ok', done.how === 'revealed' ? '📘 <b>Λύση:</b> ' + o.solution : '✔️ Λυμένο. ' + (o.ok || ''));
+    if (o.onDone) queueMicrotask(() => o.onDone(null, true));
+  }
+  return w;
+}
+function mcQ(o) {
+  const id = o.id, done = S.tasks[id];
+  const w = el('div', { class: 'q', 'data-q': id });
+  w.append(el('div', { class: 'q-p', html: o.prompt }));
+  const opts = o.noShuffle ? o.options.slice() : shuffle(o.options.slice());
+  const list = el('div', { class: 'mc', role: 'group' }), fb = el('div', { class: 'fb', 'aria-live': 'polite' });
+  let wrong = 0;
+  const bs = opts.map(op => {
+    const b = el('button', { class: 'opt', type: 'button', html: op.t });
+    b.onclick = () => {
+      if (S.tasks[id]) return;
+      if (op.ok) {
+        const xp = Math.max(3, (o.xp || 10) - 4 * wrong);
+        finish(id, xp, 'ok'); b.classList.add('ok'); bs.forEach(x => x.disabled = true); w.classList.add('correct');
+        say(fb, 'ok', `✔️ <b>Σωστά!</b> ${op.why || ''} <b class="xpt">+${xp} XP</b>`);
+        if (o.onDone) o.onDone();
+      } else { wrong++; b.classList.add('bad'); b.disabled = true; say(fb, 'bad', '✖️ ' + (op.why || 'Όχι.')); }
+    };
+    return b;
+  });
+  list.append(...bs); w.append(list, fb);
+  if (done) {
+    bs.forEach((b, i) => { b.disabled = true; if (opts[i].ok) b.classList.add('ok'); });
+    w.classList.add('correct'); say(fb, 'ok', '✔️ Λυμένο. ' + (opts.find(x => x.ok).why || ''));
+    if (o.onDone) queueMicrotask(() => o.onDone(true));
+  }
+  return w;
+}
+
+/* ---------- γραφήματα (SVG) ---------- */
+function niceStep(r) { return r <= 8 ? 1 : r <= 16 ? 2 : r <= 40 ? 5 : r <= 80 ? 10 : r <= 200 ? 25 : 10 ** Math.floor(Math.log10(r)); }
+function ticks(lo, hi, step) { step = step || niceStep(hi - lo); const t = []; for (let v = lo; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6)); return t; }
+function niceMax(m) { const s = niceStep(m); return Math.max(s, Math.ceil(m / s) * s); }
+function niceNum(x) { const e = Math.floor(Math.log10(x)), b = x / 10 ** e; const m = b <= 1 ? 1 : b <= 2 ? 2 : b <= 2.5 ? 2.5 : b <= 5 ? 5 : 10; return m * 10 ** e; }
+function frame(o) {
+  const svg = sv('svg', { viewBox: `0 0 ${o.w} ${o.h}`, class: 'chart', role: 'img', 'aria-label': o.aria || '' });
+  const pw = o.w - o.l - o.r, ph = o.h - o.t - o.b;
+  const X = v => o.l + (v - o.x0) / (o.x1 - o.x0) * pw, Y = v => o.t + ph - (v - o.y0) / (o.y1 - o.y0) * ph;
+  const IX = x => o.x0 + (x - o.l) / pw * (o.x1 - o.x0), IY = y => o.y0 + (o.t + ph - y) / ph * (o.y1 - o.y0);
+  (o.yt || []).forEach(v => svg.append(sv('line', { x1: o.l, x2: o.w - o.r, y1: Y(v), y2: Y(v), class: 'grid' }), sv('text', { x: o.l - 7, y: Y(v) + 4, 'text-anchor': 'end' }, o.yfmt ? o.yfmt(v) : fmt(v))));
+  svg.append(sv('line', { x1: o.l, x2: o.w - o.r, y1: Y(o.y0), y2: Y(o.y0), class: 'axis' }));
+  if (!o.noY) svg.append(sv('line', { x1: o.l, x2: o.l, y1: Y(o.y0), y2: o.t - 4, class: 'axis' }));
+  (o.xt || []).forEach(v => svg.append(sv('line', { x1: X(v), x2: X(v), y1: Y(o.y0), y2: Y(o.y0) + 5, class: 'axis' }), sv('text', { x: X(v), y: Y(o.y0) + 19, 'text-anchor': 'middle' }, o.xfmt ? o.xfmt(v) : fmt(v))));
+  if (o.xl) svg.append(sv('text', { x: o.l + pw / 2, y: o.h - 5, 'text-anchor': 'middle', class: 'axl' }, o.xl));
+  if (o.yl) { const cy = o.t + ph / 2; svg.append(sv('text', { x: 12, y: cy, 'text-anchor': 'middle', class: 'axl', transform: `rotate(-90 12 ${cy})` }, o.yl)); }
+  return { svg, X, Y, IX, IY };
+}
+function barCat(labels, f, o = {}) {
+  const k = labels.length, ymax = o.ymax || niceMax(Math.max(...f, 1));
+  const F = frame({ w: 560, h: 260, l: 46, r: 12, t: 16, b: 46, x0: -0.7, x1: k - 0.3, y0: 0, y1: ymax, xt: labels.map((_, i) => i), xfmt: i => labels[i], yt: ticks(0, ymax), xl: o.xl || 'Τιμή xᵢ', yl: o.yl || 'Συχνότητα νᵢ', aria: o.aria || 'Ραβδόγραμμα συχνοτήτων' });
+  const bw = (F.X(1) - F.X(0)) * 0.62;
+  f.forEach((v, i) => {
+    F.svg.append(sv('rect', { x: F.X(i) - bw / 2, y: F.Y(v), width: bw, height: Math.max(0, F.Y(0) - F.Y(v)), rx: 3, class: 'bar' + ((o.hl || []).includes(i) ? ' hl' : '') }));
+    if (v > 0) F.svg.append(sv('text', { x: F.X(i), y: F.Y(v) - 5, 'text-anchor': 'middle', class: 'lbl' }, String(v)));
+  });
+  return F;
+}
+function histChart(cls, f, o = {}) {
+  const c = cls[0][1] - cls[0][0], ymax = o.ymax || niceMax(Math.max(...f));
+  const F = frame({ w: 600, h: 300, l: 46, r: 14, t: 16, b: 48, x0: cls[0][0] - c, x1: cls[cls.length - 1][1] + c, y0: 0, y1: ymax, xt: [...new Set(cls.flat())], yt: ticks(0, ymax), xl: o.xl, yl: o.yl || 'Συχνότητα νᵢ', aria: o.aria });
+  cls.forEach(([a, b], i) => {
+    F.svg.append(sv('rect', { x: F.X(a), y: F.Y(f[i]), width: F.X(b) - F.X(a), height: F.Y(0) - F.Y(f[i]), class: 'bar hb' + (o.hl === i ? ' hl' : '') }));
+    if (f[i] > 0) F.svg.append(sv('text', { x: (F.X(a) + F.X(b)) / 2, y: F.Y(f[i]) - 6, 'text-anchor': 'middle', class: 'lbl' }, String(f[i])));
+  });
+  return F;
+}
+function ogive(cls, f, o) {
+  const n = sum(f), pts = [[cls[0][0], 0]]; let c = 0;
+  cls.forEach(([a, b], i) => { c += f[i]; pts.push([b, c / n * 100]); });
+  const x0 = cls[0][0], x1 = cls[cls.length - 1][1];
+  const F = frame({ w: 600, h: 320, l: 52, r: 18, t: 14, b: 48, x0, x1, y0: 0, y1: 100, xt: [...new Set(cls.flat())], yt: [0, 20, 40, 60, 80, 100], yfmt: v => v + '%', xl: o.xl, yl: 'Fᵢ %', aria: 'Πολύγωνο αθροιστικών σχετικών συχνοτήτων με ολισθητές ανάγνωσης' });
+  F.svg.append(sv('polyline', { points: pts.map(([x, y]) => `${F.X(x)},${F.Y(y)}`).join(' '), class: 'ogive' }));
+  pts.forEach(([x, y]) => F.svg.append(sv('circle', { cx: F.X(x), cy: F.Y(y), r: 4, class: 'dot' })));
+  const gl = sv('g'); F.svg.append(gl);
+  const out = el('p', { class: 'readout', 'aria-live': 'polite' });
+  const rp = el('input', { type: 'range', min: '0', max: '100', step: '1', value: String(o.p ?? 50), 'aria-label': 'Ποσοστό p%' });
+  const rx = el('input', { type: 'range', min: String(x0), max: String(x1), step: '0.25', value: String((x0 + x1) / 2), 'aria-label': 'Τιμή x' });
+  let mode = 'p';
+  const draw = () => {
+    gl.innerHTML = ''; let p, x;
+    if (mode === 'p') { p = +rp.value; x = gPct(cls, f, p); } else { x = +rx.value; p = gCdf(cls, f, x); }
+    gl.append(sv('line', { x1: F.X(x0), y1: F.Y(p), x2: F.X(x), y2: F.Y(p), class: 'guide' }), sv('line', { x1: F.X(x), y1: F.Y(p), x2: F.X(x), y2: F.Y(0), class: 'guide' }), sv('circle', { cx: F.X(x), cy: F.Y(p), r: 6, class: 'gdot' }));
+    out.innerHTML = mode === 'p' ? `Περίπου το <b>${fmt(p, 0)}%</b> των παρατηρήσεων είναι μικρότερο από <b>≈ ${fmt(x, 1)}</b>.` : `Μικρότερο από <b>${fmt(x, 2)}</b>: περίπου το <b>${fmt(p, 0)}%</b> των παρατηρήσεων.`;
+  };
+  rp.addEventListener('input', () => { mode = 'p'; draw(); });
+  rx.addEventListener('input', () => { mode = 'x'; draw(); });
+  draw();
+  return el('div', {}, el('div', { class: 'chartbox' }, F.svg), el('div', { class: 'rngs' }, el('label', { class: 'rng' }, el('span', {}, 'Ποσοστό p%:'), rp), el('label', { class: 'rng' }, el('span', {}, 'Τιμή x:'), rx)), out,
+    el('p', { class: 'mut small' }, 'Εργαλείο επαλήθευσης: το γράφημα δίνει γρήγορες εκτιμήσεις. Για ακριβή απάντηση χρησιμοποίησε τον τύπο.'));
+}
+function dotPlot(data, o = {}) {
+  const cnt = Array(11).fill(0); data.forEach(v => cnt[v]++);
+  const ymax = Math.max(4, ...cnt);
+  const F = frame({ w: 600, h: 40 + ymax * 22, l: 20, r: 20, t: 22, b: 30, x0: -0.5, x1: 10.5, y0: 0, y1: ymax, xt: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], noY: true, aria: o.aria });
+  const m = mean(data), dev = sv('g', { class: 'devs', opacity: '0' }); F.svg.append(dev);
+  const k = Array(11).fill(0);
+  [...data].sort((a, b) => a - b).forEach(v => { const y = F.Y(k[v] + 0.5); k[v]++; dev.append(sv('line', { x1: F.X(v), x2: F.X(m), y1: y, y2: y, class: v > m ? 'dpos' : 'dneg' })); F.svg.append(sv('circle', { cx: F.X(v), cy: y, r: 7, class: 'dot' })); });
+  F.svg.append(sv('line', { x1: F.X(m), x2: F.X(m), y1: F.Y(0), y2: 8, class: 'meanline' }), sv('text', { x: F.X(m) + 7, y: 14, class: 'lbl' }, 'x̄ = ' + fmt(m)));
+  return { svg: F.svg, dev };
+}
+function freqTable(rows, head) {
+  const t = el('table', { class: 'tbl' });
+  t.append(el('thead', {}, el('tr', {}, ...head.map(h => el('th', { scope: 'col' }, h)))));
+  const tb = el('tbody'); rows.forEach((r, i) => tb.append(el('tr', { class: r.tot ? 'tot' : null }, el('th', { scope: 'row' }, r.c[0]), ...r.c.slice(1).map(c => el('td', {}, c))))); t.append(tb);
+  return el('div', { class: 'tblwrap' }, t);
+}
+
+/* ---------- αλληλεπιδραστικά στοιχεία ---------- */
+function balance(o) {
+  const W = 640, H = 300, BY = 222, done = !!S.tasks[o.taskId];
+  const X = v => 40 + (v - o.lo) / (o.hi - o.lo) * (W - 80), IX = x => o.lo + (x - 40) / (W - 80) * (o.hi - o.lo);
+  const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart bal', role: 'img', 'aria-label': 'Ζυγαριά: κάθε βαθμός είναι ένα βαρίδι πάνω σε σανίδα. Μετακίνησε το υπομόχλιο μέχρι να ισορροπήσει.' });
+  const beamG = sv('g'), labG = sv('g');
+  beamG.append(sv('rect', { x: X(o.lo), y: BY, width: X(o.hi) - X(o.lo), height: 8, rx: 3, class: 'beam' }));
+  o.vals.forEach((v, i) => { for (let k = 0; k < o.freq[i]; k++) beamG.append(sv('circle', { cx: X(v), cy: BY - 7 - k * 11.4, r: 5.2, class: 'dot' })); labG.append(sv('text', { x: X(v), y: BY + 25, 'text-anchor': 'middle', class: 'lbl' }, String(v))); });
+  svg.append(sv('line', { x1: 20, x2: W - 20, y1: H - 10, y2: H - 10, class: 'axis' }), beamG);
+  const ful = sv('polygon', { class: 'fulcrum', 'fill-opacity': '0.9' }); svg.append(ful, labG);
+  const live = el('p', { class: 'balmsg', 'aria-live': 'polite' });
+  const rng = el('input', { type: 'range', min: String(o.vals[0]), max: String(o.vals[o.vals.length - 1]), step: '0.05', value: '4', 'aria-label': 'Θέση υπομοχλίου' });
+  let p = done ? o.target : 4;
+  function draw() {
+    const d = o.target - p, ang = Math.max(-9, Math.min(9, d * 7)), fx = X(p);
+    beamG.setAttribute('transform', `rotate(${ang.toFixed(2)} ${fx} ${BY + 8})`); labG.setAttribute('transform', `rotate(${ang.toFixed(2)} ${fx} ${BY + 8})`);
+    ful.setAttribute('points', `${fx},${BY + 8} ${fx - 22},${H - 10} ${fx + 22},${H - 10}`);
+    rng.value = String(p);
+    if (Math.abs(d) < 1e-9) { live.innerHTML = `⚖️ <b>Ισορροπία στο ${fmt(p)}!</b> Η μέση τιμή είναι το «κέντρο βάρους» των δεδομένων.`; live.className = 'balmsg ok'; if (!S.tasks[o.taskId]) finish(o.taskId, 10); }
+    else { live.innerHTML = `Υπομόχλιο στο <b>${fmt(p)}</b> — η σανίδα γέρνει ${d > 0 ? '<b>δεξιά ↘</b> (περισσότερο «βάρος» δεξιά)' : '<b>αριστερά ↙</b> (περισσότερο «βάρος» αριστερά)'}.`; live.className = 'balmsg'; }
+  }
+  function setP(v) { v = Math.round(v / 0.05) * 0.05; v = Math.max(o.vals[0], Math.min(o.vals[o.vals.length - 1], v)); if (Math.abs(v - o.target) < 0.031) v = o.target; p = +v.toFixed(2); draw(); }
+  rng.addEventListener('input', () => setP(parseFloat(rng.value)));
+  let drag = false;
+  svg.addEventListener('pointerdown', e => { drag = true; try { svg.setPointerCapture(e.pointerId); } catch (x) { } setP(IX(svgPt(svg, e).x)); });
+  svg.addEventListener('pointermove', e => { if (drag) setP(IX(svgPt(svg, e).x)); });
+  svg.addEventListener('pointerup', () => drag = false); svg.addEventListener('pointercancel', () => drag = false);
+  draw();
+  return el('div', {}, el('div', { class: 'chartbox' }, svg), el('label', { class: 'rng' }, el('span', {}, 'Υπομόχλιο ▲:'), rng), live);
+}
+function flip(container, order) {
+  const first = new Map(order.map(e => [e, e.getBoundingClientRect()]));
+  order.forEach(e => container.append(e));
+  if (RM) return;
+  order.forEach(e => { const a = first.get(e), b = e.getBoundingClientRect(); e.style.transition = 'none'; e.style.transform = `translate(${a.left - b.left}px,${a.top - b.top}px)`; });
+  void container.offsetWidth;
+  requestAnimationFrame(() => order.forEach((e, k) => { e.style.transition = `transform .8s cubic-bezier(.2,.8,.2,1) ${Math.min(k * 4, 200)}ms`; e.style.transform = ''; }));
+}
+function histBuilder(cls, tgt, taskId) {
+  const done = !!S.tasks[taskId], h = done ? tgt.slice() : cls.map(() => 0), ymax = 14;
+  const F = frame({ w: 600, h: 330, l: 46, r: 14, t: 14, b: 48, x0: 0, x1: 18, y0: 0, y1: ymax, xt: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18], yt: ticks(0, ymax, 2), xl: 'Ώρες χρήσης του διαδικτύου την εβδομάδα', yl: 'Συχνότητα νᵢ', aria: 'Ιστόγραμμα που χτίζεις: 7 κλάσεις ωρών' });
+  F.svg.classList.add('builder');
+  const bars = [], lbls = []; let locked = done, drag = false;
+  cls.forEach(([a, b], i) => {
+    const r = sv('rect', { x: F.X(a), width: F.X(b) - F.X(a), class: 'bar hb', tabindex: done ? '-1' : '0', role: 'slider', 'aria-label': `Κλάση [${a}, ${b})`, 'aria-valuemin': '0', 'aria-valuemax': String(ymax) });
+    const t = sv('text', { x: (F.X(a) + F.X(b)) / 2, 'text-anchor': 'middle', class: 'lbl' }, '');
+    bars.push(r); lbls.push(t); F.svg.append(r, t);
+    r.addEventListener('keydown', e => {
+      if (locked) return;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { h[i] = Math.min(ymax, h[i] + 1); e.preventDefault(); upd(); }
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { h[i] = Math.max(0, h[i] - 1); e.preventDefault(); upd(); }
+    });
+  });
+  const polyG = sv('g'); F.svg.append(polyG);
+  const msg = el('p', { class: 'fb', 'aria-live': 'polite' });
+  function at(e) { const p = svgPt(F.svg, e), xv = F.IX(p.x), i = cls.findIndex(([a, b]) => xv >= a && xv < b); if (i < 0) return; h[i] = Math.max(0, Math.min(ymax, Math.round(F.IY(p.y)))); upd(); }
+  F.svg.addEventListener('pointerdown', e => { if (locked) return; drag = true; try { F.svg.setPointerCapture(e.pointerId); } catch (x) { } at(e); });
+  F.svg.addEventListener('pointermove', e => { if (drag && !locked) at(e); });
+  const end = () => { drag = false; }; F.svg.addEventListener('pointerup', end); F.svg.addEventListener('pointercancel', end);
+  function upd() {
+    bars.forEach((r, i) => { r.setAttribute('y', F.Y(h[i])); r.setAttribute('height', Math.max(0, F.Y(0) - F.Y(h[i]))); r.setAttribute('aria-valuenow', String(h[i])); r.classList.toggle('ok', h[i] === tgt[i]); lbls[i].textContent = h[i] ? String(h[i]) : ''; lbls[i].setAttribute('y', F.Y(h[i]) - 6); });
+    if (locked) return;
+    const n = h.filter((v, i) => v === tgt[i]).length;
+    msg.innerHTML = `Σωστές στήλες: <b>${n}/${cls.length}</b>` + (n < cls.length ? ' — όσες ταιριάζουν με τον πίνακα γίνονται πράσινες.' : '');
+    if (n === cls.length) { locked = true; bars.forEach(r => r.setAttribute('tabindex', '-1')); finish(taskId, 10); msg.innerHTML = '✔️ <b>Τέλειο ιστόγραμμα!</b> Τα ορθογώνια «ακουμπούν» μεταξύ τους, γιατί οι κλάσεις είναι συνεχόμενες.'; }
+  }
+  function poly() {
+    if (polyG.childNodes.length) return;
+    const w = cls[0][1] - cls[0][0], c = cls.map(([a, b]) => (a + b) / 2);
+    const pts = [[c[0] - w, 0], ...c.map((x, i) => [x, tgt[i]]), [c[c.length - 1] + w, 0]];
+    const pl = sv('polyline', { points: pts.map(([x, y]) => `${F.X(x)},${F.Y(y)}`).join(' '), class: 'poly' });
+    polyG.append(pl); pts.forEach(([x, y]) => polyG.append(sv('circle', { cx: F.X(x), cy: F.Y(y), r: 4.5, class: 'pdot' })));
+    if (!RM) { try { const L = pl.getTotalLength(); if (L > 0) { pl.style.strokeDasharray = L; pl.style.strokeDashoffset = L; requestAnimationFrame(() => { pl.style.transition = 'stroke-dashoffset 1.4s ease'; pl.style.strokeDashoffset = '0'; }); } } catch (e) { } }
+  }
+  upd(); if (done) msg.innerHTML = '✔️ Το ιστόγραμμα είναι έτοιμο.';
+  return { wrap: el('div', {}, el('div', { class: 'chartbox' }, F.svg), msg), poly };
+}
+function colInputs(cfg) {
+  // cfg: {cells:[input], tgt:[], tol, id, autoBtn, fb, label(i), wrongMsg(i), onComplete, autoAfter}
+  const done = !!S.tasks[cfg.id], ok = cfg.cells.map(() => done); let wrong = 0;
+  const show = i => cfg.fmt ? cfg.fmt(cfg.tgt[i]) : fmt(cfg.tgt[i]);
+  const complete = () => { if (ok.every(Boolean)) { if (cfg.autoBtn) cfg.autoBtn.hidden = true; finish(cfg.id, Math.max(5, 10 - 2 * wrong - (cfg.hinted && cfg.hinted() ? 2 : 0))); cfg.onComplete && cfg.onComplete(); } };
+  cfg.cells.forEach((inp, i) => {
+    if (done) { inp.value = show(i); inp.disabled = true; inp.classList.add('ok'); return; }
+    const test = final => {
+      if (ok[i]) return;
+      const v = parseNum(inp.value);
+      if (!isNaN(v) && Math.abs(v - cfg.tgt[i]) <= (cfg.tol ?? 0.011)) {
+        ok[i] = true; inp.classList.remove('bad'); inp.classList.add('ok'); inp.disabled = true;
+        if (cfg.autoBtn && ok.filter(Boolean).length >= (cfg.autoAfter || 3) && !ok.every(Boolean)) cfg.autoBtn.hidden = false;
+        complete();
+        if (!ok.every(Boolean)) { const nx = cfg.cells.find((q, j) => !ok[j]); if (nx && document.activeElement === inp) nx.focus(); }
+      } else if (final && inp.value.trim() !== '') { wrong++; inp.classList.add('bad'); cfg.fb && say(cfg.fb, 'bad', '✖️ ' + cfg.wrongMsg(i)); }
+      else inp.classList.remove('bad');
+    };
+    inp.addEventListener('input', () => test(false)); inp.addEventListener('change', () => test(true));
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') test(true); });
+  });
+  if (cfg.autoBtn) cfg.autoBtn.onclick = () => {
+    cfg.autoBtn.disabled = true; let d = 0;
+    cfg.cells.forEach((inp, i) => { if (ok[i]) return; const delay = RM ? 0 : (d++) * 90; setTimeout(() => { inp.value = show(i); inp.classList.remove('bad'); inp.classList.add('ok'); inp.disabled = true; ok[i] = true; complete(); }, delay); });
+  };
+  return { isDone: () => ok.every(Boolean) };
+}
+
+/* =================== ΑΠΟΣΤΟΛΕΣ =================== */
+const MIS = {};
+function defMission(m) { MIS[m.id] = m; }
+const missionTasks = id => MIS[id].steps.flatMap(s => s.tasks);
+function missionXP(id) { const ts = missionTasks(id); let got = 0; ts.forEach(t => { if (S.tasks[t]) got += S.tasks[t].xp; }); return { got, max: ts.length * 10 }; }
+function stars(id) { if (!S.missions[id]) return 0; const { got, max } = missionXP(id), r = got / max; return r >= 0.9 ? 3 : r >= 0.6 ? 2 : 1; }
+const starStr = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+
+/* ----- Αποστολή 1 ----- */
+function m1s1(box) {
+  box.append(story('📨 <b>Νέα υπόθεση!</b> Ο διδάσκων της Στατιστικής μάς έστειλε τους βαθμούς <b>60 φοιτητών</b> (κλίμακα 0–10), όπως τους πέρασε στο αρχείο του. Θέλει να μάθει πόσοι πήραν κάθε βαθμό. Πρώτη δουλειά του ντετέκτιβ: <b>να μετρήσει</b>.'));
+  const done = !!S.tasks['m1.count'];
+  let lens = null; const marks = new Set();
+  const counter = el('p', { class: 'counter', 'aria-live': 'polite' });
+  const tiles = el('div', { class: 'tiles' });
+  const tileEls = SHUF.map((o, k) => {
+    const t = el('button', { class: 'tile', type: 'button', 'aria-label': `Βαθμός ${o.g}` }, String(o.g));
+    t.onclick = () => {
+      if (lens === null || o.g !== lens) { t.classList.remove('nope'); void t.offsetWidth; t.classList.add('nope'); return; }
+      if (marks.has(k)) { marks.delete(k); t.classList.remove('marked'); } else { marks.add(k); t.classList.add('marked'); }
+      updCounter();
+    };
+    return t;
+  });
+  tiles.append(...tileEls);
+  const chips = XV.map(v => { const c = el('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', 'aria-label': `Φακός στον βαθμό ${v}` }, String(v)); c.onclick = () => setLens(lens === v ? null : v); return c; });
+  function setLens(v) { lens = v; marks.clear(); tileEls.forEach((t, k) => { t.classList.toggle('lit', v !== null && SHUF[k].g === v); t.classList.remove('marked'); }); chips.forEach((c, i) => c.setAttribute('aria-pressed', String(XV[i] === v))); updCounter(); }
+  function updCounter() { counter.innerHTML = lens === null ? 'Διάλεξε έναν βαθμό στον φακό. Τα πλακίδια με αυτόν τον βαθμό θα φωτιστούν· κάνε κλικ σε καθένα για να το σημαδέψεις ✓ και να το μετρήσεις.' : `Φακός στο <b>${lens}</b>: σημάδεψες <b>${marks.size}</b> πλακίδια.`; }
+  updCounter();
+  const fb = el('div', { class: 'fb', 'aria-live': 'polite' });
+  const sumCell = el('td', {}, ''), chartBox = el('div', { class: 'chartbox' });
+  const tb = el('tbody'), okv = XV.map(() => done); let wrong = 0;
+  const inps = XV.map((x, i) => {
+    const inp = el('input', { class: 'cell', type: 'text', inputmode: 'numeric', autocomplete: 'off', 'aria-label': `Συχνότητα του βαθμού ${x}` });
+    if (done) { inp.value = String(NU[i]); inp.disabled = true; inp.classList.add('ok'); }
+    const test = final => {
+      if (okv[i]) return;
+      const v = parseNum(inp.value);
+      if (v === NU[i]) {
+        okv[i] = true; inp.classList.remove('bad'); inp.classList.add('ok'); inp.disabled = true;
+        if (okv.every(Boolean)) { finish('m1.count', wrong === 0 ? 10 : wrong < 3 ? 8 : 6); say(fb, 'ok', '✔️ Σύνολο 60: μέτρησες σωστά όλους τους βαθμούς! Δες πώς «ψήλωσαν» οι στήλες του ραβδογράμματος.'); }
+        else { const nx = inps.find((q, j) => !okv[j]); if (nx && document.activeElement === inp) nx.focus(); }
+      } else if (final && inp.value.trim() !== '') { inp.classList.add('bad'); wrong++; say(fb, 'bad', `✖️ Ξαναμέτρησε τον βαθμό <b>${x}</b>: διάλεξε «${x}» στον φακό και σημάδεψε ένα-ένα τα φωτισμένα πλακίδια.`); }
+      else inp.classList.remove('bad');
+      upd();
+    };
+    inp.addEventListener('input', () => test(false)); inp.addEventListener('change', () => test(true)); inp.addEventListener('keydown', e => { if (e.key === 'Enter') test(true); });
+    tb.append(el('tr', {}, el('th', { scope: 'row' }, String(x)), el('td', {}, inp)));
+    return inp;
+  });
+  tb.append(el('tr', { class: 'tot' }, el('th', { scope: 'row' }, 'Σύνολο'), sumCell));
+  const tbl = el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, el('th', { scope: 'col' }, 'Βαθμός xᵢ'), el('th', { scope: 'col' }, 'Συχνότητα νᵢ'))), tb);
+  function upd() {
+    const s = inps.reduce((a, q) => { const v = parseNum(q.value); return a + (isNaN(v) ? 0 : v); }, 0);
+    sumCell.textContent = `Σνᵢ = ${s}` + (okv.every(Boolean) ? ' ✔️' : '');
+    chartBox.innerHTML = ''; chartBox.append(barCat(XV.map(String), XV.map((x, i) => okv[i] ? NU[i] : 0), { ymax: 16, xl: 'Βαθμός xᵢ', aria: 'Ραβδόγραμμα: οι στήλες εμφανίζονται όταν μετρήσεις σωστά κάθε βαθμό' }).svg);
+  }
+  upd(); if (done) say(fb, 'ok', '✔️ Η καταμέτρηση ολοκληρώθηκε.');
+  box.append(el('div', { class: 'two' },
+    el('div', {}, el('div', { class: 'chips', role: 'group', 'aria-label': 'Φακός' }, el('span', { class: 'mut' }, '🔍 Φακός:'), ...chips), tiles, counter),
+    el('div', {}, el('p', { class: 'mut small' }, 'Γράψε πόσες φορές εμφανίζεται κάθε βαθμός (συχνότητα νᵢ):'), el('div', { class: 'tblwrap' }, tbl), fb, chartBox)));
+}
+function m1s2(box) {
+  box.append(el('p', { html: 'Τώρα μετατρέπουμε τις συχνότητες σε <b>ποσοστά</b> και <b>αθροίσματα</b>. Συμπλήρωσε τα κελιά (πάτα <kbd>Enter</kbd> για έλεγχο).' }));
+  box.append(el('div', { class: 'tip', html: '🤖 <b>Ο υπολογιστής λατρεύει τις επαναλήψεις.</b> Μόλις συμπληρώσεις σωστά <b>3 κελιά</b> μιας στήλης, εμφανίζεται το κουμπί <b>⚡ Συμπλήρωση</b> — όπως η «λαβή συμπλήρωσης» στο υπολογιστικό φύλλο, που αντιγράφει τον ίδιο τύπο στα επόμενα κελιά.' }));
+  const cols = [
+    { id: 'm1.f', h: 'fᵢ %', tgt: FP, hint: 'fᵢ% = νᵢ / ν · 100. Για τον βαθμό 3: 6/60 · 100 = 10.<br>Στο υπολογιστικό φύλλο: <code>=B2/60*100</code>' },
+    { id: 'm1.N', h: 'Νᵢ', tgt: CN, hint: 'Ν₁ = ν₁ και κάθε επόμενο Νᵢ = Νᵢ₋₁ + νᵢ (προσθέτεις τη συχνότητα στο προηγούμενο άθροισμα).<br>Στο υπολογιστικό φύλλο: <code>=D2+B3</code>' },
+    { id: 'm1.F', h: 'Fᵢ %', tgt: CF, hint: 'Fᵢ% = Νᵢ / ν · 100 (ή Fᵢ₋₁% + fᵢ%).<br>Στο υπολογιστικό φύλλο: <code>=D2/60*100</code>' }];
+  const fb = el('div', { class: 'fb', 'aria-live': 'polite' }), hintBox = el('div', { class: 'hint', hidden: true });
+  const thr = el('tr', {}, el('th', { scope: 'col' }, 'xᵢ'), el('th', { scope: 'col' }, 'νᵢ'));
+  cols.forEach(c => {
+    c.auto = el('button', { class: 'btn mini acc', type: 'button', hidden: true }, '⚡ Συμπλήρωση');
+    c.hb = el('button', { class: 'btn mini ghost', type: 'button', 'aria-label': `Υπόδειξη για τη στήλη ${c.h}` }, '💡');
+    c.hb.onclick = () => { hintBox.hidden = false; hintBox.innerHTML = `💡 <b>${c.h}:</b> ${c.hint}`; c.used = true; };
+    thr.append(el('th', { scope: 'col' }, el('div', {}, c.h), el('div', { class: 'thbtns' }, c.hb, c.auto)));
+    c.cells = [];
+  });
+  const tb = el('tbody');
+  XV.forEach((x, i) => {
+    const tr = el('tr', {}, el('th', { scope: 'row' }, String(x)), el('td', {}, String(NU[i])));
+    cols.forEach(c => { const inp = el('input', { class: 'cell', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': `${c.h} για xᵢ = ${x}` }); c.cells.push(inp); tr.append(el('td', {}, inp)); });
+    tb.append(tr);
+  });
+  tb.append(el('tr', { class: 'tot' }, el('th', { scope: 'row' }, 'Σύνολο'), el('td', {}, '60'), el('td', {}, '100'), el('td', {}, '—'), el('td', {}, '—')));
+  cols.forEach(c => colInputs({ id: c.id, cells: c.cells, tgt: c.tgt, autoBtn: c.auto, fb, hinted: () => c.used, wrongMsg: i => `Έλεγξε το κελί <b>${c.h}</b> για xᵢ = ${XV[i]}. Πάτα 💡 στην κεφαλίδα της στήλης για τον κανόνα.`, onComplete: () => say(fb, 'ok', `✔️ Η στήλη <b>${c.h}</b> είναι πλήρης!`) }));
+  box.append(el('div', { class: 'tblwrap' }, el('table', { class: 'tbl' }, el('thead', {}, thr), tb)), hintBox, fb);
+}
+function refTable1() {
+  return freqTable([...XV.map((x, i) => ({ c: [String(x), String(NU[i]), fmt(FP[i]), String(CN[i]), fmt(CF[i])] })), { tot: true, c: ['Σύνολο', '60', '100', '—', '—'] }], ['xᵢ', 'νᵢ', 'fᵢ %', 'Νᵢ', 'Fᵢ %']);
+}
+function m1s3(box) {
+  box.append(el('p', { html: 'Ο πίνακας συχνοτήτων είναι έτοιμος — τώρα ο ντετέκτιβ απαντά γρήγορα σε ερωτήσεις:' }), refTable1());
+  box.append(numQ({ id: 'm1.q1', prompt: 'Τι ποσοστό των φοιτητών πήρε βαθμό <b>μικρότερο από 5</b>;', answer: 15, tol: 0.01, dec: 0, unit: '%',
+    alt: [{ v: 35, msg: 'Προσοχή: «μικρότερο από 5» <b>δεν</b> περιλαμβάνει το 5. Μόνο οι βαθμοί 3 και 4.' }, { v: 9, msg: 'Το 9 είναι το <i>πλήθος</i> των φοιτητών. Ζητείται ποσοστό: 9/60 · 100.' }, { v: 10, msg: 'Πήρες μόνο τον βαθμό 3. Πρόσθεσε και τον βαθμό 4.' }, { v: 5, msg: 'Πήρες μόνο τον βαθμό 4. Πρόσθεσε και τον βαθμό 3.' }, { v: 85, msg: 'Αυτό είναι το ποσοστό με βαθμό 5 ή περισσότερο — το αντίθετο!' }],
+    hints: ['Ποιοι βαθμοί είναι μικρότεροι από 5; (Μόνο το 3 και το 4.)', 'fᵢ% του 3 + fᵢ% του 4 — ή απευθείας το Fᵢ% στη γραμμή του 4.'],
+    solution: 'Βαθμοί 3 και 4: 10% + 5% = <b>15%</b> (= F% στη γραμμή του 4 = 9/60 · 100).', ok: '9 από τους 60 φοιτητές, δηλαδή 15%.' }));
+  box.append(numQ({ id: 'm1.q2', prompt: 'Τι ποσοστό πήρε βαθμό <b>μεγαλύτερο από 7</b>;', answer: 20, tol: 0.01, dec: 0, unit: '%',
+    alt: [{ v: 40, msg: 'Προσοχή: «μεγαλύτερο από 7» <b>δεν</b> περιλαμβάνει το 7. Μόνο οι βαθμοί 8 και 9.' }, { v: 12, msg: 'Το 12 είναι το <i>πλήθος</i>. Ζητείται ποσοστό: 12/60 · 100.' }, { v: 80, msg: 'Το 80% είναι το F% μέχρι και το 7. Ζητείται το υπόλοιπο: 100 − 80.' }, { v: 15, msg: 'Πήρες μόνο τον βαθμό 8. Πρόσθεσε και τον 9.' }, { v: 5, msg: 'Πήρες μόνο τον βαθμό 9. Πρόσθεσε και τον 8.' }],
+    hints: ['Ποιοι βαθμοί είναι μεγαλύτεροι από 7;', '100% − (Fᵢ% στη γραμμή του 7).'],
+    solution: 'Βαθμοί 8 και 9: 15% + 5% = <b>20%</b> (= 100% − 80%).', ok: '12 από τους 60 φοιτητές, δηλαδή 20%.' }));
+  box.append(mcQ({ id: 'm1.q3', prompt: 'Ποια στήλη σού δείχνει <b>αμέσως</b> ότι το 35% των φοιτητών πήρε βαθμό <b>το πολύ 5</b>;', options: [
+    { t: 'Η <b>Fᵢ%</b> (σχετική αθροιστική συχνότητα)', ok: true, why: 'Η Fᵢ% «μαζεύει» όλα τα ποσοστά μέχρι και την τιμή xᵢ.' },
+    { t: 'Η <b>fᵢ%</b> (σχετική συχνότητα)', why: 'Η fᵢ% αφορά μόνο την τιμή 5 (20%).' },
+    { t: 'Η <b>Νᵢ</b> (αθροιστική συχνότητα)', why: 'Η Νᵢ δίνει πλήθος (21 φοιτητές), όχι ποσοστό.' },
+    { t: 'Η <b>νᵢ</b> (συχνότητα)', why: 'Η νᵢ δίνει πόσοι πήραν ακριβώς 5 (12 φοιτητές).' }] }));
+}
+defMission({ id: 'm1', n: 1, emoji: '🧮', title: 'Οι 60 βαθμοί', sub: 'Οργάνωσε τα δεδομένα σε πίνακα συχνοτήτων', ex: 'Άσκηση 1α, 1δ', steps: [
+  { title: 'Σάρωση των δεδομένων', tasks: ['m1.count'], build: m1s1 },
+  { title: 'Ο πίνακας συχνοτήτων', tasks: ['m1.f', 'm1.N', 'm1.F'], build: m1s2 },
+  { title: 'Ερωτήσεις του ντετέκτιβ', tasks: ['m1.q1', 'm1.q2', 'm1.q3'], build: m1s3 }] });
+
+/* ----- Αποστολή 2 ----- */
+function m2s1(box) {
+  box.append(story('Φαντάσου ότι κάθε βαθμός είναι ένα <b>βαρίδι</b> πάνω σε μια σανίδα-αριθμογραμμή. Σε ποιο σημείο πρέπει να μπει το υπομόχλιο (▲) ώστε η σανίδα να <b>ισορροπεί</b>; Σύρε πάνω στο σχήμα ή χρησιμοποίησε τον ολισθητή.'));
+  box.append(balance({ vals: XV, freq: NU, lo: 2.5, hi: 9.5, target: 6.05, taskId: 'm2.bal' }));
+  box.append(el('div', { class: 'formula', html: 'Μέση τιμή: &nbsp;<b>x̄ = (x₁ν₁ + x₂ν₂ + … + xₖνₖ) / ν = Σxᵢνᵢ / ν</b>' }));
+  box.append(numQ({ id: 'm2.mean', prompt: 'Υπολόγισε τη <b>μέση τιμή x̄</b> των 60 βαθμών (2 δεκαδικά).', answer: 6.05, tol: 0.005,
+    alt: [{ v: 6, tol: 0.001, msg: 'Πολύ κοντά, αλλά όχι. Μήπως υπολόγισες (3 + 4 + … + 9)/7; Κάθε βαθμός μετράει τόσες φορές όσες είναι η συχνότητά του.' }, { v: 60 / 7, tol: 0.01, msg: 'Αυτός είναι ο μέσος όρος των <i>συχνοτήτων</i> (60/7). Ζητείται ο μέσος όρος των <i>βαθμών</i>.' }, { v: 363, tol: 0.001, msg: 'Σωστό το άθροισμα Σxᵢνᵢ = 363! Τώρα διαίρεσέ το με το πλήθος ν = 60.' }, { v: 6.1, tol: 0.001, msg: 'Σχεδόν! Δώσε την απάντηση με 2 δεκαδικά ψηφία.' }, { v: 363 / 7, tol: 0.01, msg: 'Διαίρεσες με 7 (τις διαφορετικές τιμές). Διαίρεσε με το πλήθος όλων των παρατηρήσεων, ν = 60.' }],
+    hints: ['Πολλαπλασίασε κάθε βαθμό με τη συχνότητά του: 3·6 + 4·3 + 5·12 + 6·15 + 7·12 + 8·9 + 9·3.', 'Το άθροισμα είναι 363. Διαίρεσέ το με ν = 60.'],
+    solution: 'x̄ = (3·6 + 4·3 + 5·12 + 6·15 + 7·12 + 8·9 + 9·3) / 60 = 363 / 60 = <b>6,05</b>.', ok: 'x̄ = 363/60 = 6,05 — ακριβώς εκεί που ισορροπεί η ζυγαριά!' }));
+}
+function m2s2(box) {
+  box.append(story('Η <b>διάμεσος</b> είναι η τιμή που βρίσκεται <b>στη μέση</b> — αλλά μόνο αν πρώτα βάλουμε τις παρατηρήσεις <b>σε σειρά</b>. Πάτησε «Ταξινόμηση» και παρακολούθησε.'));
+  const done = !!S.tasks['m2.sort'];
+  const tiles = el('div', { class: 'tiles' });
+  const tEls = SHUF.map(o => el('div', { class: 'tile', 'data-pos': String(o.i + 1) }, String(o.g)));
+  const bySorted = []; SHUF.forEach((o, k) => { bySorted[o.i] = tEls[k]; });
+  const btn = el('button', { class: 'btn pri', type: 'button' }, '↕️ Ταξινόμηση σε αύξουσα σειρά');
+  const cap = el('p', { class: 'mut', 'aria-live': 'polite' }, 'Τα δεδομένα όπως συλλέχθηκαν (χωρίς σειρά).');
+  function markMid() { bySorted[29].classList.add('mid'); bySorted[30].classList.add('mid'); tiles.classList.add('sorted'); cap.innerHTML = 'Ταξινομημένα! Οι δύο «μεσαίες» θέσεις είναι η <b>30ή</b> και η <b>31η</b> (χρωματισμένες). Ο μικρός αριθμός σε κάθε πλακίδιο δείχνει τη θέση του. <span class="small">(Στην εκφώνηση της Άσκησης 1 οι βαθμοί δίνονται ήδη ταξινομημένοι.)</span>'; }
+  if (done) { tiles.append(...bySorted); markMid(); btn.disabled = true; } else tiles.append(...tEls);
+  btn.onclick = () => { btn.disabled = true; flip(tiles, bySorted); setTimeout(() => { markMid(); finish('m2.sort', 10); }, RM ? 0 : 1000); };
+  box.append(el('div', { class: 'row' }, btn), el('div', { style: 'margin-top:10px' }, tiles), cap);
+  box.append(mcQ({ id: 'm2.rule', prompt: 'Το πλήθος ν = 60 είναι <b>άρτιος</b> αριθμός. Πώς βρίσκουμε τη διάμεσο;', options: [
+    { t: 'Παίρνουμε το ημιάθροισμα (μέσο όρο) της 30ής και της 31ης παρατήρησης, <b>αφού τις ταξινομήσουμε</b>.', ok: true, why: 'Με άρτιο ν, η διάμεσος είναι ο μέσος όρος των δύο μεσαίων παρατηρήσεων.' },
+    { t: 'Παίρνουμε την 30ή παρατήρηση με τη σειρά που δόθηκαν τα δεδομένα.', why: 'Χωρίς ταξινόμηση, η «μεσαία θέση» δεν σημαίνει τίποτα!' },
+    { t: 'Η διάμεσος είναι (ν + 1)/2 = 30,5.', why: 'Το 30,5 δείχνει <i>θέση</i>, όχι την <i>τιμή</i> της διαμέσου.' },
+    { t: 'Είναι η τιμή με τη μεγαλύτερη συχνότητα.', why: 'Αυτή είναι η επικρατούσα τιμή — θα τη δούμε στο επόμενο βήμα.' }] }));
+  box.append(numQ({ id: 'm2.med', prompt: 'Ποια είναι η <b>διάμεσος δ</b> των 60 βαθμών;', answer: 6, tol: 0.001, dec: 0,
+    alt: [{ v: 30.5, msg: 'Το 30,5 είναι θέση, όχι τιμή. Ποιος βαθμός βρίσκεται στις θέσεις 30 και 31;' }, { v: 30, msg: 'Το 30 είναι θέση. Δες ποιος βαθμός είναι στις θέσεις 30 και 31.' }, { v: 31, msg: 'Το 31 είναι θέση. Δες ποιος βαθμός είναι στις θέσεις 30 και 31.' }, { v: 6.05, msg: 'Αυτή είναι η μέση τιμή x̄. Η διάμεσος βρίσκεται από τις μεσαίες θέσεις.' }, { v: 5.5, msg: 'Δες ξανά: και η 30ή και η 31η παρατήρηση είναι 6.' }],
+    hints: ['Οι θέσεις 30 και 31 είναι χρωματισμένες στο ταξινομημένο πλέγμα.', 'Και οι δύο έχουν βαθμό 6, άρα δ = (6 + 6)/2.'],
+    solution: 'Με ν = 60 (άρτιος): δ = (x<sub>(30)</sub> + x<sub>(31)</sub>)/2 = (6 + 6)/2 = <b>6</b>. Από τον πίνακα: Ν = 21 στον βαθμό 5 και Ν = 36 στον βαθμό 6, άρα οι θέσεις 22–36 έχουν βαθμό 6.', ok: 'δ = (6 + 6)/2 = 6.' }));
+}
+function m2s3(box) {
+  box.append(el('p', { html: 'Η <b>επικρατούσα τιμή M₀</b> είναι η τιμή με τη <b>μεγαλύτερη συχνότητα</b>. Δες το ραβδόγραμμα:' }));
+  const ch = el('div', { class: 'chartbox' }); box.append(ch);
+  const draw = hl => { ch.innerHTML = ''; ch.append(barCat(XV.map(String), NU, { ymax: 16, xl: 'Βαθμός xᵢ', hl: hl ? [3] : [], aria: 'Ραβδόγραμμα συχνοτήτων των 60 βαθμών' }).svg); };
+  draw(!!S.tasks['m2.mode']);
+  box.append(numQ({ id: 'm2.mode', prompt: 'Ποια είναι η <b>επικρατούσα τιμή M₀</b>;', answer: 6, tol: 0.001, dec: 0,
+    alt: [{ v: 15, msg: 'Το 15 είναι η <i>συχνότητα</i>. Η επικρατούσα είναι ο <i>βαθμός</i> που έχει αυτή τη συχνότητα.' }, { v: 9, msg: 'Το 9 είναι ο μεγαλύτερος βαθμός — όχι ο συχνότερος.' }, { v: 25, msg: 'Το 25% είναι η σχετική συχνότητα. Ζητείται η τιμή (ο βαθμός).' }],
+    hints: ['Ποια στήλη του ραβδογράμματος είναι η ψηλότερη;'],
+    solution: 'Τη μεγαλύτερη συχνότητα (ν = 15) την έχει ο βαθμός 6, άρα <b>M₀ = 6</b>.', ok: 'Ο βαθμός 6 εμφανίζεται 15 φορές — περισσότερο από κάθε άλλον.', onDone: () => draw(true) }));
+}
+function m2s4(box) {
+  box.append(mcQ({ id: 'm2.imed', prompt: 'Η διάμεσος <b>δ = 6</b> σημαίνει ότι…', options: [
+    { t: 'τουλάχιστον το 50% των φοιτητών πήρε βαθμό <b>έως 6</b> και τουλάχιστον το 50% πήρε <b>6 ή περισσότερο</b>.', ok: true, why: 'Η διάμεσος «χωρίζει» τα ταξινομημένα δεδομένα στη μέση.' },
+    { t: 'οι περισσότεροι φοιτητές πήραν 6.', why: 'Αυτό το λέει η επικρατούσα τιμή, όχι η διάμεσος.' },
+    { t: 'ο μέσος όρος της τάξης είναι 6.', why: 'Η μέση τιμή είναι 6,05 — είναι άλλο μέτρο θέσης.' },
+    { t: 'το 6 βρίσκεται στη μέση της κλίμακας 0–10.', why: 'Η διάμεσος αφορά τα δεδομένα, όχι την κλίμακα (η μέση της κλίμακας είναι το 5).' }] }));
+  box.append(mcQ({ id: 'm2.imo', prompt: 'Η επικρατούσα τιμή <b>M₀ = 6</b> σημαίνει ότι…', options: [
+    { t: 'ο βαθμός 6 εμφανίζεται <b>συχνότερα</b> από κάθε άλλον (15 φοιτητές, δηλαδή 25%).', ok: true, why: 'Η επικρατούσα είναι η πιο «δημοφιλής» τιμή.' },
+    { t: 'το 60% των φοιτητών πήρε 6.', why: 'Το 60% είναι το F% μέχρι το 6: όσοι πήραν <i>το πολύ</i> 6.' },
+    { t: 'οι μισοί φοιτητές πήραν βαθμό κάτω από 6.', why: 'Κάτω από 6 πήρε το 35%. Τα «μισά-μισά» τα περιγράφει η διάμεσος.' },
+    { t: 'κανείς δεν πήρε βαθμό πάνω από 6.', why: 'Βαθμό πάνω από 6 πήρε το 40% των φοιτητών.' }] }));
+  const s = el('div', { class: 'tip', hidden: true, html: '🕵️ <b>Συμπέρασμα:</b> x̄ = 6,05, δ = 6, M₀ = 6. Τα τρία μέτρα θέσης σχεδόν συμπίπτουν· αυτό συμβαίνει όταν η κατανομή είναι περίπου <b>συμμετρική</b>, όπως φαίνεται και στο ραβδόγραμμα.' });
+  box.append(s); gate(['m2.imed', 'm2.imo'], () => { s.hidden = false; });
+}
+defMission({ id: 'm2', n: 2, emoji: '⚖️', title: 'Το κέντρο των δεδομένων', sub: 'Μέση τιμή, διάμεσος και επικρατούσα τιμή', ex: 'Άσκηση 1β, 1γ', steps: [
+  { title: 'Η ζυγαριά της μέσης τιμής', tasks: ['m2.bal', 'm2.mean'], build: m2s1 },
+  { title: 'Η «μεσαία» παρατήρηση: διάμεσος', tasks: ['m2.sort', 'm2.rule', 'm2.med'], build: m2s2 },
+  { title: 'Η πιο «δημοφιλής» τιμή: επικρατούσα', tasks: ['m2.mode'], build: m2s3 },
+  { title: 'Τι μας λένε τα νούμερα;', tasks: ['m2.imed', 'm2.imo'], build: m2s4 }] });
+
+/* ----- Αποστολή 3 ----- */
+function m3s1(box) {
+  box.append(story('🏛️ Ένα μουσείο θέλει να μάθει πόσο συχνά το επισκέπτονται οι νέοι. Ρωτήθηκαν <b>40 μαθητές</b> πόσες επισκέψεις σε μουσεία έκαναν μέσα σε ένα έτος. Οι απαντήσεις ομαδοποιήθηκαν σε <b>κλάσεις</b> πλάτους c = 2.'));
+  const mids = MUS.cls.map(([a, b]) => (a + b) / 2);
+  const tb = el('tbody'), midC = [], prodC = [];
+  MUS.cls.forEach(([a, b], i) => { const m = el('td', { class: 'reveal' }, '?'), p = el('td', { class: 'reveal' }, '?'); midC.push(m); prodC.push(p); tb.append(el('tr', {}, el('th', { scope: 'row' }, `[${a}, ${b})`), el('td', {}, String(MUS.f[i])), m, p)); });
+  const totP = el('td', {}, '?');
+  tb.append(el('tr', { class: 'tot' }, el('th', { scope: 'row' }, 'Σύνολο'), el('td', {}, '40'), el('td', {}, ''), totP));
+  const fill = () => { midC.forEach((c, i) => { c.textContent = fmt(mids[i]); c.className = 'shown'; }); prodC.forEach((c, i) => { c.textContent = fmt(mids[i] * MUS.f[i]); c.className = 'shown'; }); totP.textContent = '172'; };
+  box.append(el('div', { class: 'tblwrap' }, el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, ...['Επισκέψεις', 'νᵢ', 'Κέντρο xᵢ', 'xᵢ·νᵢ'].map(h => el('th', { scope: 'col' }, h)))), tb)));
+  box.append(numQ({ id: 'm3.mid', prompt: 'Το <b>κέντρο</b> μιας κλάσης είναι το μέσο της: (κάτω όριο + άνω όριο)/2. Ποιο είναι το κέντρο της κλάσης <b>[4, 6)</b>;', answer: 5, tol: 0.001, dec: 0,
+    alt: [{ v: 4, msg: 'Το 4 είναι το κάτω όριο της κλάσης.' }, { v: 6, msg: 'Το 6 είναι το άνω όριο (και δεν ανήκει καν στην κλάση!).' }, { v: 2, msg: 'Το 2 είναι το πλάτος της κλάσης.' }, { v: 10, msg: 'Πρόσθεσες τα όρια (4 + 6 = 10). Τώρα διαίρεσε με 2.' }],
+    hints: ['(4 + 6) / 2 = ;'], solution: 'x = (4 + 6)/2 = <b>5</b>.', ok: 'Συμπλήρωσα τα κέντρα όλων των κλάσεων στον πίνακα — κοίτα!', onDone: fill }));
+  box.append(numQ({ id: 'm3.mean', prompt: 'Κάθε μαθητής μιας κλάσης «αντιπροσωπεύεται» από το κέντρο της. Υπολόγισε τη <b>μέση τιμή x̄</b> των επισκέψεων.', answer: 4.3, tol: 0.005,
+    alt: [{ v: 5, msg: 'Υπολόγισες τον απλό μέσο όρο των κέντρων (1+3+5+7+9)/5. Πρέπει να τα «ζυγίσεις» με τις συχνότητες: Σxᵢνᵢ/ν.' }, { v: 172, msg: 'Σωστό το άθροισμα Σxᵢνᵢ = 172! Διαίρεσέ το με ν = 40.' }, { v: 8, msg: 'Αυτός είναι ο μέσος όρος των συχνοτήτων (40/5).' }, { v: 34.4, msg: 'Διαίρεσε με το πλήθος των μαθητών (ν = 40), όχι με το πλήθος των κλάσεων (5).' }],
+    hints: ['x̄ = Σxᵢνᵢ / ν. Το Σxᵢνᵢ είναι το σύνολο της τελευταίας στήλης (βρες πρώτα τα κέντρα).', '172 / 40 = ;'],
+    solution: 'x̄ = (1·8 + 3·12 + 5·10 + 7·6 + 9·4)/40 = 172/40 = <b>4,3</b> επισκέψεις.', ok: 'Κατά μέσο όρο κάθε μαθητής έκανε 4,3 επισκέψεις τον χρόνο.' }));
+}
+function m3s2(box) {
+  const cn = cumsum(MUS.f);
+  box.append(el('p', { html: 'Για τη διάμεσο και τα εκατοστιαία σημεία χρειαζόμαστε τις <b>αθροιστικές συχνότητες Νᵢ</b>. Συμπλήρωσέ τες:' }));
+  const fb = el('div', { class: 'fb', 'aria-live': 'polite' }), cells = [], Fc = [], tb = el('tbody');
+  MUS.cls.forEach(([a, b], i) => { const inp = el('input', { class: 'cell', type: 'text', inputmode: 'numeric', autocomplete: 'off', 'aria-label': `Νᵢ για την κλάση [${a}, ${b})` }); cells.push(inp); const f = el('td', { class: 'reveal' }, '?'); Fc.push(f); tb.append(el('tr', {}, el('th', { scope: 'row' }, `[${a}, ${b})`), el('td', {}, String(MUS.f[i])), el('td', {}, inp), f)); });
+  const showF = () => Fc.forEach((c, i) => { c.textContent = fmt(cn[i] / 40 * 100); c.className = 'shown'; });
+  box.append(el('div', { class: 'tblwrap' }, el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, ...['Επισκέψεις', 'νᵢ', 'Νᵢ', 'Fᵢ %'].map(h => el('th', { scope: 'col' }, h)))), tb)), fb);
+  colInputs({ id: 'm3.N', cells, tgt: cn, tol: 0.001, fb, wrongMsg: i => `Νᵢ = Νᵢ₋₁ + νᵢ. Για την κλάση [${MUS.cls[i][0]}, ${MUS.cls[i][1]}): ${i ? cn[i - 1] + ' + ' + MUS.f[i] : 'Ν₁ = ν₁'} = ;`, onComplete: () => { showF(); say(fb, 'ok', '✔️ Σωστά! Πρόσθεσα και τη στήλη Fᵢ% = Νᵢ/40 · 100.'); } });
+  if (S.tasks['m3.N']) showF();
+  box.append(el('div', { class: 'formula', html: 'Εκατοστιαίο σημείο σε κλάσεις: &nbsp;<b>P<sub>k</sub> = L + (k·ν/100 − Ν<sub>i−1</sub>) / νᵢ · c</b><br><span class="small">L: κάτω όριο της κλάσης όπου «πέφτει» η θέση k·ν/100 · Ν<sub>i−1</sub>: αθροιστική συχνότητα της προηγούμενης κλάσης · νᵢ: συχνότητα της κλάσης · c: πλάτος. Η διάμεσος είναι το P<sub>50</sub>.</span>' }));
+  box.append(ogive(MUS.cls, MUS.f, { xl: 'Επισκέψεις σε μουσεία (ανά έτος)', p: 50 }));
+  box.append(numQ({ id: 'm3.med', prompt: 'Υπολόγισε τη <b>διάμεσο δ</b> (= P<sub>50</sub>).', answer: 4, tol: 0.0075,
+    alt: [{ v: 20, msg: 'Το 20 = ν/2 είναι η <i>θέση</i>. Βρες σε ποια κλάση πέφτει και εφάρμοσε τον τύπο.' }, { v: 3, msg: 'Το 3 είναι το κέντρο της κλάσης [2, 4). Εφάρμοσε τον τύπο.' }, { v: 5, msg: 'Το 5 είναι το κέντρο της [4, 6). Η θέση 20 «πέφτει» στην κλάση [2, 4) (Ν: 8 → 20).' }, { v: 4.3, msg: 'Αυτή είναι η μέση τιμή.' }],
+    hints: ['Θέση: ν/2 = 40/2 = 20. Η αθροιστική συχνότητα φτάνει το 20 στο τέλος της κλάσης [2, 4).', 'δ = 2 + (20 − 8)/12 · 2'],
+    solution: 'Θέση ν/2 = 20 → κλάση [2, 4) με Ν<sub>i−1</sub> = 8, νᵢ = 12, c = 2: δ = 2 + (20 − 8)/12 · 2 = 2 + 2 = <b>4</b>.', ok: 'Τουλάχιστον οι μισοί μαθητές έκαναν έως 4 επισκέψεις.' }));
+  box.append(numQ({ id: 'm3.p40', prompt: 'Υπολόγισε το <b>40ό εκατοστιαίο σημείο P₄₀</b> (2 δεκαδικά).', answer: 10 / 3, tol: 0.0075, show: '3,33',
+    alt: [{ v: 16, msg: 'Το 16 = 0,40 · 40 είναι η <i>θέση</i>. Σε ποια κλάση πέφτει;' }, { v: 3.3, tol: 0.001, msg: 'Σχεδόν! Δώσε 2 δεκαδικά.' }, { v: 40, msg: 'Το 40 είναι το k. Βρες πρώτα τη θέση k·ν/100.' }],
+    hints: ['Θέση: 0,40 · 40 = 16 → κλάση [2, 4) (Ν: 8 → 20).', 'P₄₀ = 2 + (16 − 8)/12 · 2'],
+    solution: 'Θέση 0,40 · 40 = 16 → κλάση [2, 4): P₄₀ = 2 + (16 − 8)/12 · 2 = 2 + 1,33 = <b>3,33</b>.', ok: 'Το 40% των μαθητών έκανε λιγότερες από 3,33 επισκέψεις.' }));
+}
+function m3s3(box) {
+  box.append(el('p', { html: 'Σε ομαδοποιημένα δεδομένα, <b>επικρατούσα κλάση</b> είναι η κλάση με τη μεγαλύτερη συχνότητα. Την τιμή M₀ την εκτιμούμε με μια έξυπνη <b>γεωμετρική κατασκευή</b> στο ιστόγραμμα.' }));
+  const H = histChart(MUS.cls, MUS.f, { xl: 'Επισκέψεις σε μουσεία', ymax: 14, hl: 1, aria: 'Ιστόγραμμα συχνοτήτων των επισκέψεων· η επικρατούσα κλάση είναι χρωματισμένη' });
+  const cons = sv('g', { class: 'cons', opacity: '0' }); H.svg.append(cons);
+  const [L, U] = MUS.cls[1], fm = 12, fp = 8, fn = 10, mo = L + (fm - fp) / ((fm - fp) + (fm - fn)) * (U - L), ym = fm - (fm - fn) * ((mo - L) / (U - L));
+  cons.append(sv('line', { x1: H.X(L), y1: H.Y(fm), x2: H.X(U), y2: H.Y(fn), class: 'cline' }), sv('line', { x1: H.X(L), y1: H.Y(fp), x2: H.X(U), y2: H.Y(fm), class: 'cline' }),
+    sv('line', { x1: H.X(mo), y1: H.Y(ym), x2: H.X(mo), y2: H.Y(0), class: 'guide' }), sv('circle', { cx: H.X(mo), cy: H.Y(ym), r: 5, class: 'gdot' }), sv('text', { x: H.X(mo) + 6, y: H.Y(0) - 8, class: 'lbl' }, 'M₀'));
+  const bt = el('button', { class: 'btn', type: 'button', 'aria-pressed': 'false' }, '📐 Δείξε τη γεωμετρική κατασκευή');
+  const expl = el('p', { class: 'mut', hidden: true, html: 'Ενώνουμε την πάνω <b>αριστερή</b> γωνία του ψηλότερου ορθογωνίου με την πάνω αριστερή γωνία του <b>επόμενου</b> και την πάνω <b>δεξιά</b> γωνία του με την πάνω δεξιά γωνία του <b>προηγούμενου</b>. Από το σημείο τομής κατεβαίνουμε κάθετα στον άξονα: εκεί βρίσκεται η M₀.' });
+  bt.onclick = () => { const on = cons.getAttribute('opacity') === '0'; cons.setAttribute('opacity', on ? '1' : '0'); bt.setAttribute('aria-pressed', String(on)); expl.hidden = !on; };
+  box.append(el('div', { class: 'chartbox' }, H.svg), el('div', { class: 'row' }, bt), expl);
+  box.append(mcQ({ id: 'm3.mcls', prompt: 'Ποια είναι η <b>επικρατούσα κλάση</b>;', noShuffle: true, options: MUS.cls.map(([a, b], i) => ({ t: `[${a}, ${b})`, ok: i === 1, why: i === 1 ? 'Έχει τη μεγαλύτερη συχνότητα (ν = 12).' : `Η κλάση [${a}, ${b}) έχει συχνότητα ${MUS.f[i]}· υπάρχει κλάση με μεγαλύτερη.` })) }));
+  box.append(numQ({ id: 'm3.mode', prompt: 'Υπολόγισε την <b>επικρατούσα τιμή M₀</b> με τον τύπο <b>M₀ = L + Δ₁/(Δ₁ + Δ₂) · c</b>, όπου Δ₁ = νᵢ − ν<sub>i−1</sub> και Δ₂ = νᵢ − ν<sub>i+1</sub> (2 δεκαδικά).', answer: 10 / 3, tol: 0.0075, show: '3,33',
+    alt: [{ v: 3, msg: 'Το 3 είναι το κέντρο της επικρατούσας κλάσης — μια πρόχειρη εκτίμηση. Με τον τύπο (ή την κατασκευή) παίρνουμε ακριβέστερη τιμή.' }, { v: 12, msg: 'Το 12 είναι η συχνότητα της επικρατούσας κλάσης· ζητείται τιμή στον άξονα των επισκέψεων.' }, { v: 3.3, tol: 0.001, msg: 'Σχεδόν! Δώσε 2 δεκαδικά.' }],
+    hints: ['Επικρατούσα κλάση [2, 4): L = 2, c = 2, Δ₁ = 12 − 8 = 4, Δ₂ = 12 − 10 = 2.', 'M₀ = 2 + 4/(4 + 2) · 2'],
+    solution: 'L = 2, Δ₁ = 12 − 8 = 4, Δ₂ = 12 − 10 = 2, c = 2: M₀ = 2 + 4/6 · 2 ≈ <b>3,33</b> επισκέψεις.', ok: 'Συμπίπτει με το P₄₀ = 3,33 — καθαρή σύμπτωση!' }));
+  const s = el('div', { class: 'tip', hidden: true, html: '🕵️ <b>Συμπέρασμα:</b> x̄ = 4,3 &gt; δ = 4 &gt; M₀ ≈ 3,33. Όταν η μέση τιμή είναι μεγαλύτερη από τη διάμεσο, η κατανομή έχει «ουρά» προς τα δεξιά: λίγοι μαθητές με πολλές επισκέψεις «τραβούν» τη μέση τιμή προς τα πάνω.' });
+  box.append(s); gate(['m3.mcls', 'm3.mode'], () => { s.hidden = false; });
+}
+defMission({ id: 'm3', n: 3, emoji: '🏛️', title: 'Το μυστήριο του μουσείου', sub: 'Δεδομένα σε κλάσεις: μέση τιμή, διάμεσος, επικρατούσα, P₄₀', ex: 'Άσκηση 2', steps: [
+  { title: 'Κλάσεις, κέντρα και μέση τιμή', tasks: ['m3.mid', 'm3.mean'], build: m3s1 },
+  { title: 'Αθροιστικές συχνότητες, διάμεσος και P₄₀', tasks: ['m3.N', 'm3.med', 'm3.p40'], build: m3s2 },
+  { title: 'Η επικρατούσα τιμή στο ιστόγραμμα', tasks: ['m3.mcls', 'm3.mode'], build: m3s3 }] });
+
+/* ----- Αποστολή 4 ----- */
+function netTable(extra) {
+  const rows = [el('tr', {}, el('th', { scope: 'row' }, 'νᵢ'), ...NET.f.map(v => el('td', {}, String(v))))];
+  if (extra) { const cn = cumsum(NET.f); rows.push(el('tr', {}, el('th', { scope: 'row' }, 'Νᵢ'), ...cn.map(v => el('td', {}, String(v)))), el('tr', {}, el('th', { scope: 'row' }, 'Fᵢ %'), ...cn.map(v => el('td', {}, fmt(v / 50 * 100))))); }
+  return el('div', { class: 'tblwrap' }, el('table', { class: 'tbl compact' }, el('thead', {}, el('tr', {}, el('th', { scope: 'col' }, 'Ώρες'), ...NET.cls.map(([a, b]) => el('th', { scope: 'col' }, `[${a}, ${b})`)))), el('tbody', {}, ...rows)));
+}
+function m4s1(box) {
+  box.append(story('💻 Σε μια δειγματοληπτική έρευνα ρωτήθηκαν <b>50 φοιτητές</b> πόσες ώρες την εβδομάδα χρησιμοποιούν το διαδίκτυο. Χτίσε το <b>ιστόγραμμα συχνοτήτων</b>: κάνε κλικ (ή σύρε) μέσα σε κάθε κλάση για να ορίσεις το ύψος της — ή επίλεξε μια στήλη με <kbd>Tab</kbd> και άλλαξέ την με τα βελάκια <kbd>↑</kbd> <kbd>↓</kbd>.'));
+  box.append(netTable(false));
+  const hb = histBuilder(NET.cls, NET.f, 'm4.hist');
+  box.append(hb.wrap);
+  const q = mcQ({ id: 'm4.poly', prompt: 'Για να σχεδιάσουμε το <b>πολύγωνο συχνοτήτων</b> ενώνουμε με ευθύγραμμα τμήματα…', options: [
+    { t: 'τα μέσα των πάνω πλευρών των ορθογωνίων (κέντρο κλάσης, νᵢ), προσθέτοντας στα άκρα δύο κλάσεις με συχνότητα 0.', ok: true, why: 'Έτσι το πολύγωνο «κλείνει» πάνω στον οριζόντιο άξονα. Δες το στο ιστόγραμμα!' },
+    { t: 'τις πάνω αριστερές γωνίες των ορθογωνίων.', why: 'Όχι — παίρνουμε το <i>μέσο</i> κάθε πάνω πλευράς, δηλαδή το κέντρο της κλάσης.' },
+    { t: 'τα όρια των κλάσεων πάνω στον οριζόντιο άξονα.', why: 'Αυτά τα σημεία έχουν όλα ύψος 0 — δεν δείχνουν τις συχνότητες.' },
+    { t: 'τις αθροιστικές συχνότητες στα άνω όρια των κλάσεων.', why: 'Αυτό είναι το <i>αθροιστικό</i> πολύγωνο — θα το δούμε στο βήμα 3.' }], onDone: () => hb.poly() });
+  const qw = el('div', { hidden: true }, q); box.append(qw);
+  gate(['m4.hist'], () => { qw.hidden = false; });
+}
+function m4s2(box) {
+  const c = NET.cls.map(([a, b]) => (a + b) / 2), qc = [], tb = el('tbody');
+  NET.cls.forEach(([a, b], i) => { const td = el('td', { class: 'reveal' }, '?'); qc.push(td); tb.append(el('tr', {}, el('th', { scope: 'row' }, `[${a}, ${b})`), el('td', {}, String(NET.f[i])), el('td', {}, fmt(c[i])), td)); });
+  const tot = el('td', {}, 'Σ = ?'); tb.append(el('tr', { class: 'tot' }, el('th', { scope: 'row' }, 'Σύνολο'), el('td', {}, '50'), el('td', {}, ''), tot));
+  box.append(el('p', { html: 'Υπολόγισε (στο τετράδιο ή με αριθμομηχανή) τη στήλη <b>xᵢ·νᵢ</b> και βρες τη μέση τιμή.' }), el('div', { class: 'tblwrap' }, el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, ...['Ώρες', 'νᵢ', 'Κέντρο xᵢ', 'xᵢ·νᵢ'].map(h => el('th', { scope: 'col' }, h)))), tb)));
+  box.append(numQ({ id: 'm4.mean', prompt: 'Μέση τιμή <b>x̄</b> των ωρών χρήσης (2 δεκαδικά):', answer: 9.12, tol: 0.005,
+    alt: [{ v: 456, msg: 'Σωστό το Σxᵢνᵢ = 456! Διαίρεσε με ν = 50.' }, { v: 9, msg: 'Το 9 είναι ο απλός μέσος όρος των κέντρων (3 + 5 + … + 15)/7. Ζύγισε κάθε κέντρο με τη συχνότητά του.' }, { v: 456 / 7, tol: 0.01, msg: 'Διαίρεσε με ν = 50 (φοιτητές), όχι με 7 (κλάσεις).' }, { v: 50 / 7, tol: 0.01, msg: 'Αυτός είναι ο μέσος όρος των συχνοτήτων.' }],
+    hints: ['xᵢ·νᵢ: 3·4 = 12, 5·6 = 30, 7·8 = 56, 9·12 = 108, 11·9 = 99, 13·7 = 91, 15·4 = 60.', 'Σxᵢνᵢ = 456, άρα x̄ = 456/50.'],
+    solution: 'x̄ = (12 + 30 + 56 + 108 + 99 + 91 + 60)/50 = 456/50 = <b>9,12</b> ώρες την εβδομάδα.', ok: 'Κατά μέσο όρο 9,12 ώρες την εβδομάδα.',
+    onDone: () => { qc.forEach((td, i) => { td.textContent = fmt(c[i] * NET.f[i]); td.className = 'shown'; }); tot.textContent = 'Σ = 456'; } }));
+}
+function m4s3(box) {
+  box.append(el('p', { html: 'Το <b>πολύγωνο αθροιστικών σχετικών συχνοτήτων</b> ενώνει τα σημεία (άνω όριο κλάσης, Fᵢ%). Με τους ολισθητές μπορείς να «διαβάσεις» ποσοστά και εκατοστιαία σημεία.' }), netTable(true));
+  box.append(ogive(NET.cls, NET.f, { xl: 'Ώρες χρήσης του διαδικτύου την εβδομάδα', p: 50 }));
+  box.append(numQ({ id: 'm4.lt10', prompt: 'Τι ποσοστό των φοιτητών χρησιμοποιεί το διαδίκτυο <b>λιγότερες από 10 ώρες</b> την εβδομάδα;', answer: 60, tol: 0.01, dec: 0, unit: '%',
+    alt: [{ v: 30, msg: 'Το 30 είναι το <i>πλήθος</i> των φοιτητών. Μετάτρεψέ το σε ποσοστό: 30/50 · 100.' }, { v: 78, msg: 'Συμπεριέλαβες και την κλάση [10, 12). «Λιγότερες από 10» σημαίνει έως και την κλάση [8, 10).' }, { v: 36, msg: 'Σταμάτησες στην κλάση [6, 8). Η κλάση [8, 10) περιέχει τιμές μικρότερες από 10 (το 10 δεν ανήκει σε αυτή).' }, { v: 24, msg: 'Αυτό είναι μόνο το ποσοστό της κλάσης [8, 10).' }, { v: 40, msg: 'Αυτό είναι το ποσοστό με 10 ή <i>περισσότερες</i> ώρες.' }],
+    hints: ['Οι κλάσεις κάτω από το 10 είναι οι [2, 4), [4, 6), [6, 8), [8, 10).', 'Δες το Fᵢ% της κλάσης [8, 10) — ή σύρε τον ολισθητή «Τιμή x» στο 10.'],
+    solution: 'Ν₄ = 4 + 6 + 8 + 12 = 30 φοιτητές → 30/50 · 100 = <b>60%</b> (είναι το F₄%).', ok: 'Το 60% είναι online λιγότερο από 10 ώρες — άρα το 40% 10 ώρες ή περισσότερο.' }));
+  box.append(numQ({ id: 'm4.med', prompt: 'Υπολόγισε τη <b>διάμεσο δ</b> (2 δεκαδικά).', answer: 55 / 6, tol: 0.0075, show: '9,17',
+    alt: [{ v: 25, msg: 'Το 25 = ν/2 είναι η <i>θέση</i>. Σε ποια κλάση πέφτει;' }, { v: 9, msg: 'Το 9 είναι το κέντρο της κλάσης [8, 10). Εφάρμοσε τον τύπο για ακρίβεια.' }, { v: 9.12, tol: 0.001, msg: 'Αυτή είναι η μέση τιμή x̄.' }, { v: 9.2, tol: 0.001, msg: 'Σχεδόν! Δώσε 2 δεκαδικά.' }],
+    hints: ['Θέση ν/2 = 25 → κλάση [8, 10) (Ν: 18 → 30).', 'δ = 8 + (25 − 18)/12 · 2'],
+    solution: 'Θέση 25 → κλάση [8, 10) με Ν<sub>i−1</sub> = 18, νᵢ = 12, c = 2: δ = 8 + 7/12 · 2 ≈ <b>9,17</b> ώρες.', ok: 'Οι μισοί φοιτητές είναι online λιγότερο από ~9,17 ώρες την εβδομάδα.' }));
+  box.append(numQ({ id: 'm4.p40', prompt: 'Υπολόγισε το <b>40ό εκατοστιαίο σημείο P₄₀</b> (2 δεκαδικά).', answer: 25 / 3, tol: 0.0075, show: '8,33',
+    alt: [{ v: 20, msg: 'Το 20 = 0,40 · 50 είναι η <i>θέση</i>. Σε ποια κλάση πέφτει;' }, { v: 8.3, tol: 0.001, msg: 'Σχεδόν! Δώσε 2 δεκαδικά.' }, { v: 9, msg: 'Το 9 είναι κέντρο κλάσης. Εφάρμοσε τον τύπο.' }],
+    hints: ['Θέση 0,40 · 50 = 20 → κλάση [8, 10) (Ν: 18 → 30).', 'P₄₀ = 8 + (20 − 18)/12 · 2'],
+    solution: 'Θέση 20 → κλάση [8, 10): P₄₀ = 8 + 2/12 · 2 ≈ <b>8,33</b> ώρες.', ok: 'Το 40% των φοιτητών είναι online λιγότερο από ~8,33 ώρες την εβδομάδα.' }));
+  const s = el('div', { class: 'tip', hidden: true, html: '🌐 <b>Ψηφιακή ευημερία:</b> Το 40% των φοιτητών του δείγματος περνά 10 ή περισσότερες ώρες την εβδομάδα στο διαδίκτυο. Εσύ πόσες; Στο <a href="#lab">Εργαστήριο</a> μπορείτε να αναλύσετε τα (ανώνυμα) δεδομένα της τάξης σας.' });
+  box.append(s); gate(['m4.lt10', 'm4.med', 'm4.p40'], () => { s.hidden = false; });
+}
+defMission({ id: 'm4', n: 4, emoji: '💻', title: 'Ώρες στο διαδίκτυο', sub: 'Ιστόγραμμα, πολύγωνο συχνοτήτων και εκατοστιαία σημεία', ex: 'Άσκηση 3', steps: [
+  { title: 'Χτίσε το ιστόγραμμα', tasks: ['m4.hist', 'm4.poly'], build: m4s1 },
+  { title: 'Μέση τιμή', tasks: ['m4.mean'], build: m4s2 },
+  { title: 'Αθροιστικό πολύγωνο: ποσοστά, διάμεσος και P₄₀', tasks: ['m4.lt10', 'm4.med', 'm4.p40'], build: m4s3 }] });
+
+/* ----- Αποστολή 5 ----- */
+function m5s1(box) {
+  box.append(story('Δύο τμήματα έγραψαν το ίδιο διαγώνισμα και έχουν <b>την ίδια μέση τιμή 6</b>. Είναι όμως «ίδια» τα τμήματα;'));
+  const A = dotPlot(CLA, { aria: 'Σημειόγραμμα βαθμών τμήματος Α' }), B = dotPlot(CLB, { aria: 'Σημειόγραμμα βαθμών τμήματος Β' });
+  const bt = el('button', { class: 'btn', type: 'button', 'aria-pressed': 'false' }, '↔️ Δείξε τις αποκλίσεις από τη μέση τιμή');
+  bt.onclick = () => { const on = bt.getAttribute('aria-pressed') !== 'true'; bt.setAttribute('aria-pressed', String(on)); [A, B].forEach(p => p.dev.setAttribute('opacity', on ? '1' : '0')); };
+  box.append(el('h3', {}, 'Τμήμα Α'), el('div', { class: 'chartbox' }, A.svg), el('h3', {}, 'Τμήμα Β'), el('div', { class: 'chartbox' }, B.svg), el('div', { class: 'row' }, bt));
+  box.append(el('p', { class: 'mut small', html: 'Πράσινες γραμμές: τιμές πάνω από τη μέση τιμή · κόκκινες: κάτω. Η <b>διακύμανση</b> είναι (περίπου) ο μέσος όρος των <b>τετραγώνων</b> αυτών των αποκλίσεων.' }));
+  box.append(mcQ({ id: 'm5.cmp', prompt: 'Σε ποιο τμήμα οι βαθμοί είναι πιο «απλωμένοι» (μεγαλύτερη <b>διασπορά</b>);', options: [
+    { t: 'Στο τμήμα Β', ok: true, why: 'Οι αποκλίσεις από τη μέση τιμή είναι πολύ μεγαλύτερες (βαθμοί από 2 έως 10).' },
+    { t: 'Στο τμήμα Α', why: 'Στο Α οι βαθμοί είναι «μαζεμένοι» γύρω από το 6 (από 5 έως 7).' },
+    { t: 'Έχουν ίδια διασπορά, αφού έχουν ίδια μέση τιμή', why: 'Η μέση τιμή δεν λέει τίποτα για το πόσο απλωμένα είναι τα δεδομένα!' }] }));
+}
+function m5s2(box) {
+  box.append(el('div', { class: 'formula', html: 'Διακύμανση δείγματος: <b>s² = Σνᵢ(xᵢ − x̄)² / (ν − 1)</b> &nbsp;·&nbsp; Τυπική απόκλιση: <b>s = √s²</b> &nbsp;·&nbsp; Συντελεστής μεταβλητότητας: <b>CV = s / x̄ · 100%</b><br><span class="small">Στο σχολικό βιβλίο η διακύμανση ορίζεται συχνά με διαιρέτη ν. Για <i>δείγμα</i> (όπως στην Άσκηση 1) χρησιμοποιούμε συνήθως ν − 1. Το υλικό δέχεται και τις δύο εκδοχές.</span>' }));
+  const m = 6.05, d = XV.map(x => x - m), d2 = d.map(v => v * v), nd2 = d2.map((v, i) => v * NU[i]);
+  const tg = [d[0], d2[0], nd2[0]], tolr = [0.006, 0.006, 0.02], names = ['xᵢ − x̄', '(xᵢ − x̄)²', 'νᵢ(xᵢ − x̄)²'];
+  const first = tg.map((t, k) => el('input', { class: 'cell', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': names[k] + ' για xᵢ = 3' }));
+  const rest = [], tb = el('tbody');
+  XV.forEach((x, i) => {
+    const tr = el('tr', {}, el('th', { scope: 'row' }, String(x)), el('td', {}, String(NU[i])));
+    if (i === 0) first.forEach(inp => tr.append(el('td', {}, inp)));
+    else [d[i], d2[i], nd2[i]].forEach(v => { const td = el('td', { class: 'reveal' }, '?'); td.dataset.v = fmt(v, 4); rest.push(td); tr.append(td); });
+    tb.append(tr);
+  });
+  const tot = el('td', {}, 'Σ = ?');
+  tb.append(el('tr', { class: 'tot' }, el('th', { scope: 'row' }, 'Σύνολο'), el('td', {}, '60'), el('td', {}, ''), el('td', {}, ''), tot));
+  const autoB = el('button', { class: 'btn acc', type: 'button', hidden: true }, '⚡ Συμπλήρωσε τις υπόλοιπες γραμμές');
+  const fb = el('div', { class: 'fb', 'aria-live': 'polite' });
+  const fillRest = inst => rest.forEach((c, k) => setTimeout(() => { c.textContent = c.dataset.v; c.className = 'shown'; }, (RM || inst) ? 0 : k * 60));
+  const done = !!S.tasks['m5.row'], okf = [done, done, done]; let wrong = 0;
+  first.forEach((inp, k) => {
+    if (done) { inp.value = fmt(tg[k], 4); inp.disabled = true; inp.classList.add('ok'); return; }
+    const test = final => {
+      if (okf[k]) return;
+      const v = parseNum(inp.value);
+      if (!isNaN(v) && Math.abs(v - tg[k]) <= tolr[k]) { okf[k] = true; inp.classList.remove('bad'); inp.classList.add('ok'); inp.disabled = true; if (okf.every(Boolean)) { autoB.hidden = false; say(fb, 'ok', '✔️ Η πρώτη γραμμή είναι σωστή! Τώρα άφησε τον υπολογιστή να επαναλάβει τον ίδιο υπολογισμό.'); } }
+      else if (final && inp.value.trim() !== '') { wrong++; inp.classList.add('bad'); say(fb, 'bad', '✖️ ' + ['xᵢ − x̄ = 3 − 6,05 = ; (θα βγει αρνητικό!)', 'Ύψωσε στο τετράγωνο: (−3,05)² = ;', 'Πολλαπλασίασε με τη συχνότητα: 6 · 9,3025 = ;'][k]); }
+      else inp.classList.remove('bad');
+    };
+    inp.addEventListener('input', () => test(false)); inp.addEventListener('change', () => test(true)); inp.addEventListener('keydown', e => { if (e.key === 'Enter') test(true); });
+  });
+  autoB.onclick = () => { autoB.hidden = true; fillRest(false); finish('m5.row', Math.max(5, 10 - 2 * wrong)); };
+  if (done) fillRest(true);
+  box.append(el('p', { html: 'Συμπλήρωσε την <b>πρώτη γραμμή</b> (xᵢ = 3, με x̄ = 6,05). Μετά ο υπολογιστής θα κάνει τις υπόλοιπες — όπως όταν «σέρνεις» έναν τύπο στο υπολογιστικό φύλλο.' }),
+    el('div', { class: 'tblwrap' }, el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, ...['xᵢ', 'νᵢ', ...names].map(h => el('th', { scope: 'col' }, h)))), tb)), el('div', { class: 'row' }, autoB), fb);
+  const SS = 152.85, s2 = SS / 59, s2p = SS / 60, s = Math.sqrt(s2), sp = Math.sqrt(s2p);
+  box.append(numQ({ id: 'm5.ss', prompt: 'Πόσο είναι το άθροισμα <b>Σνᵢ(xᵢ − x̄)²</b>;', answer: SS, tol: 0.02,
+    alt: [{ v: 2349, msg: 'Αυτό είναι το Σxᵢ²νᵢ. Ισχύει Σνᵢ(xᵢ − x̄)² = Σxᵢ²νᵢ − ν·x̄² = 2349 − 60 · 6,05².' }, { v: 0, tol: 0.001, msg: 'Το άθροισμα των απλών αποκλίσεων Σνᵢ(xᵢ − x̄) είναι πάντα 0! Γι\' αυτό τις υψώνουμε στο τετράγωνο.' }],
+    hints: ['Πρόσθεσε την τελευταία στήλη: 55,815 + 12,6075 + 13,23 + 0,0375 + 10,83 + 34,2225 + 26,1075.'],
+    solution: 'Σνᵢ(xᵢ − x̄)² = <b>152,85</b>.', ok: '', onDone: () => { tot.textContent = 'Σ = 152,85'; } }));
+  box.append(numQ({ id: 'm5.var', prompt: 'Υπολόγισε τη <b>διακύμανση s²</b> (2 δεκαδικά).', answer: s2, tol: 0.006, show: '2,59',
+    alt: [{ v: s2p, tol: 0.006, accept: true, msg: 'Αυτή είναι η διακύμανση με διαιρέτη ν = 60 (≈ 2,55), όπως στο σχολικό βιβλίο. Για δείγμα συνήθως διαιρούμε με ν − 1 = 59 και παίρνουμε s² ≈ 2,59.' }, { v: SS, tol: 0.02, msg: 'Αυτό είναι το άθροισμα. Διαίρεσέ το με ν − 1 = 59.' }, { v: s, tol: 0.006, msg: 'Αυτή είναι η τυπική απόκλιση s. Ζητείται η διακύμανση s² (χωρίς ρίζα).' }],
+    hints: ['s² = Σνᵢ(xᵢ − x̄)² / (ν − 1) = 152,85 / 59'],
+    solution: 's² = 152,85 / 59 ≈ <b>2,59</b> (με διαιρέτη ν: 152,85/60 ≈ 2,55).', ok: 's² = 152,85 / 59 ≈ 2,59.' }));
+  box.append(numQ({ id: 'm5.sd', prompt: 'Υπολόγισε την <b>τυπική απόκλιση s</b> (2 δεκαδικά).', answer: s, tol: 0.006, show: '1,61',
+    alt: [{ v: sp, tol: 0.006, accept: true, msg: 'Σωστό για διαιρέτη ν (√2,55 ≈ 1,60). Με ν − 1: s = √2,59 ≈ 1,61.' }, { v: s2, tol: 0.006, msg: 'Αυτή είναι η διακύμανση. Η τυπική απόκλιση είναι η <b>τετραγωνική ρίζα</b> της: √2,59.' }],
+    hints: ['s = √s² = √2,59'], solution: 's = √2,59 ≈ <b>1,61</b> βαθμοί.', ok: 's = √2,59 ≈ 1,61 βαθμοί.' }));
+  box.append(numQ({ id: 'm5.cv', prompt: 'Υπολόγισε τον <b>συντελεστή μεταβλητότητας CV</b> (σε %, 1 δεκαδικό).', answer: 100 * s / m, tol: 0.1, unit: '%', show: '26,6',
+    alt: [{ v: 100 * sp / m, tol: 0.1, accept: true, msg: 'Σωστό για διαιρέτη ν (CV ≈ 26,4%). Με ν − 1: CV ≈ 26,6%.' }, { v: s / m, tol: 0.003, msg: 'Σωστός λόγος! Γράψ\' τον ως ποσοστό: πολλαπλασίασε με 100.' }],
+    hints: ['CV = s / x̄ · 100% = 1,61 / 6,05 · 100%'], solution: 'CV = 1,61 / 6,05 · 100% ≈ <b>26,6%</b>.', ok: 'CV ≈ 26,6%.' }));
+  box.append(mcQ({ id: 'm5.hom', prompt: 'Με <b>CV ≈ 26,6%</b>, οι βαθμοί του δείγματος είναι…', options: [
+    { t: '<b>μη ομοιογενείς</b>, γιατί CV &gt; 10%', ok: true, why: 'Θεωρούμε ένα δείγμα ομοιογενές όταν CV ≤ 10%.' },
+    { t: '<b>ομοιογενείς</b>, γιατί CV &lt; 50%', why: 'Το όριο που χρησιμοποιούμε είναι το 10%.' },
+    { t: 'δεν μπορούμε να πούμε, γιατί δεν ξέρουμε τη διάμεσο', why: 'Η ομοιογένεια κρίνεται από τον CV, όχι από τη διάμεσο.' }] }));
+}
+function m5s3(box) {
+  const c = NET.cls.map(([a, b]) => (a + b) / 2);
+  box.append(el('p', { html: 'Ας εφαρμόσουμε τα ίδια στις <b>ώρες χρήσης του διαδικτύου</b> (Άσκηση 3, x̄ = 9,12). Για δεδομένα σε κλάσεις, ο πιο βολικός τύπος είναι:' }),
+    el('div', { class: 'formula', html: '<b>s² = [ Σxᵢ²νᵢ − (Σxᵢνᵢ)² / ν ] / (ν − 1)</b>' }));
+  box.append(freqTable([...NET.cls.map(([a, b], i) => ({ c: [`[${a}, ${b})`, String(NET.f[i]), fmt(c[i]), fmt(c[i] * NET.f[i]), fmt(c[i] * c[i] * NET.f[i])] })), { tot: true, c: ['Σύνολο', '50', '', '456', '4722'] }], ['Ώρες', 'νᵢ', 'xᵢ', 'xᵢνᵢ', 'xᵢ²νᵢ']));
+  const s2 = (4722 - 456 * 456 / 50) / 49, s = Math.sqrt(s2), sp = Math.sqrt((4722 - 456 * 456 / 50) / 50);
+  box.append(numQ({ id: 'm5.sd3', prompt: 'Υπολόγισε την <b>τυπική απόκλιση s</b> των ωρών (2 δεκαδικά).', answer: s, tol: 0.006, show: '3,39',
+    alt: [{ v: sp, tol: 0.006, accept: true, msg: 'Σωστό για διαιρέτη ν = 50 (≈ 3,36). Με ν − 1 = 49: s ≈ 3,39.' }, { v: s2, tol: 0.01, msg: 'Αυτή είναι η διακύμανση s² ≈ 11,50. Πάρε την τετραγωνική ρίζα.' }, { v: s2 * 49 / 50, tol: 0.01, msg: 'Αυτή είναι διακύμανση (≈ 11,27). Πάρε την τετραγωνική ρίζα.' }, { v: 563.28, tol: 0.01, msg: 'Σωστός αριθμητής! Διαίρεσε με ν − 1 = 49 και πάρε ρίζα.' }],
+    hints: ['(Σxᵢνᵢ)²/ν = 456²/50 = 4158,72 → αριθμητής: 4722 − 4158,72 = 563,28.', 's² = 563,28 / 49 ≈ 11,50 → s = √11,50.'],
+    solution: 's² = (4722 − 456²/50)/49 = 563,28/49 ≈ 11,50 → s ≈ <b>3,39</b> ώρες.', ok: 's ≈ 3,39 ώρες.' }));
+  box.append(numQ({ id: 'm5.cv3', prompt: 'Υπολόγισε τον <b>CV</b> των ωρών (σε %, 1 δεκαδικό).', answer: 100 * s / 9.12, tol: 0.1, unit: '%', show: '37,2',
+    alt: [{ v: 100 * sp / 9.12, tol: 0.1, accept: true, msg: 'Σωστό για διαιρέτη ν (≈ 36,8%). Με ν − 1: CV ≈ 37,2%.' }, { v: s / 9.12, tol: 0.003, msg: 'Σωστός λόγος! Γράψ\' τον ως ποσοστό (· 100).' }],
+    hints: ['CV = 3,39 / 9,12 · 100%'], solution: 'CV = 3,39 / 9,12 · 100% ≈ <b>37,2%</b>.', ok: 'CV ≈ 37,2%.' }));
+  box.append(mcQ({ id: 'm5.cmp2', prompt: 'Ποιο δείγμα είναι πιο <b>ομοιογενές</b>: οι βαθμοί (CV ≈ 26,6%) ή οι ώρες στο διαδίκτυο (CV ≈ 37,2%);', options: [
+    { t: 'Οι βαθμοί, γιατί έχουν μικρότερο CV', ok: true, why: 'Ο CV είναι καθαρός αριθμός (ποσοστό), άρα συγκρίνει δείγματα με διαφορετικές μονάδες. (Κανένα όμως δεν είναι ομοιογενές, αφού και τα δύο έχουν CV &gt; 10%.)' },
+    { t: 'Οι ώρες, γιατί έχουν μεγαλύτερη τυπική απόκλιση', why: 'Μεγαλύτερη διασπορά σημαίνει λιγότερη ομοιογένεια — και τα s σε διαφορετικές μονάδες (βαθμοί, ώρες) δεν συγκρίνονται άμεσα.' },
+    { t: 'Δεν συγκρίνονται, γιατί έχουν διαφορετικές μονάδες μέτρησης', why: 'Ακριβώς γι\' αυτό υπάρχει ο CV: δεν έχει μονάδες, άρα επιτρέπει τη σύγκριση!' }] }));
+}
+defMission({ id: 'm5', n: 5, emoji: '📏', title: 'Πόσο απλωμένα;', sub: 'Διακύμανση, τυπική απόκλιση και συντελεστής μεταβλητότητας', ex: 'Άσκηση 1β, 3α', challenge: true, steps: [
+  { title: 'Ίδια μέση τιμή, άλλη ιστορία', tasks: ['m5.cmp'], build: m5s1 },
+  { title: 'Η διασπορά των 60 βαθμών', tasks: ['m5.row', 'm5.ss', 'm5.var', 'm5.sd', 'm5.cv', 'm5.hom'], build: m5s2 },
+  { title: 'Η διασπορά των ωρών στο διαδίκτυο', tasks: ['m5.sd3', 'm5.cv3', 'm5.cmp2'], build: m5s3 }] });
+
+/* ---------- προβολή αποστολής ---------- */
+function renderMission(view, id) {
+  const M = MIS[id];
+  view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'),
+    el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, M.emoji),
+      el('div', {}, el('div', { class: 'kicker' }, `Αποστολή ${M.n}${M.challenge ? ' · ★ Πρόκληση' : ''} · ${M.ex}`), el('h1', { tabindex: '-1' }, M.title), el('p', { class: 'mut' }, M.sub))));
+  const prog = el('div', { class: 'steps-prog', 'aria-label': 'Πρόοδος βημάτων' }); view.append(prog);
+  const secs = [];
+  function drawProg() { prog.innerHTML = ''; M.steps.forEach((st, i) => { const ok = st.tasks.every(t => S.tasks[t]); prog.append(el('span', { class: 'sp' + (ok ? ' ok' : '') + (i <= (S.unlock[id] || 0) ? ' on' : ''), title: st.title }, ok ? '✓' : String(i + 1))); }); }
+  M.steps.forEach((st, i) => {
+    const last = i === M.steps.length - 1;
+    const sec = el('section', { class: 'card step', id: `${id}-s${i}`, 'aria-labelledby': `${id}-h${i}` });
+    sec.append(el('h2', { id: `${id}-h${i}` }, el('span', { class: 'stepn' }, `Βήμα ${i + 1}`), ' ', st.title));
+    const body = el('div'); sec.append(body);
+    const nb = el('button', { class: 'btn pri next', type: 'button', hidden: true }, last ? '🏁 Ολοκλήρωση αποστολής' : 'Συνέχεια ▸');
+    sec.append(nb);
+    if (i > (S.unlock[id] || 0)) sec.hidden = true;
+    view.append(sec); secs.push(sec);
+    st.build(body);
+    nb.onclick = () => {
+      if (!last) { S.unlock[id] = Math.max(S.unlock[id] || 0, i + 1); save(); secs[i + 1].hidden = false; nb.hidden = true; drawProg(); secs[i + 1].scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' }); }
+      else { nb.hidden = true; completeMission(id, view); }
+    };
+    gate(st.tasks, () => { nb.hidden = last ? !!S.missions[id] : (S.unlock[id] || 0) > i; drawProg(); });
+  });
+  drawProg();
+  if (S.missions[id]) view.append(doneCard(id));
+}
+function completeMission(id, view) {
+  if (!S.missions[id]) { S.missions[id] = { t: Date.now() }; save(); giveBadge(id); }
+  const c = doneCard(id); view.append(c); c.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' });
+}
+function doneCard(id) {
+  const st = stars(id), { got, max } = missionXP(id), ids = Object.keys(MIS), nx = ids[ids.indexOf(id) + 1];
+  return el('div', { class: 'card done' }, el('div', { class: 'big-stars', role: 'img', 'aria-label': `${st} από 3 αστέρια` }, starStr(st)), el('h2', {}, 'Η υπόθεση λύθηκε! 🎉'),
+    el('p', {}, `Συγκέντρωσες ${got} από ${max} XP σε αυτή την αποστολή. Σήμα: ${BADGES[id].e} ${BADGES[id].t}.`),
+    el('div', { class: 'row', style: 'justify-content:center' }, nx ? el('a', { class: 'btn pri', href: '#' + nx }, `Επόμενη: ${MIS[nx].title} ▸`) : el('a', { class: 'btn pri', href: '#lab' }, 'Πάμε στο Εργαστήριο ▸'), el('a', { class: 'btn', href: '#home' }, 'Χάρτης')));
+}
+
+/* =================== ΕΡΓΑΣΤΗΡΙΟ =================== */
+function statItems(d) {
+  const n = d.length, m = n ? mean(d) : NaN, me = n ? median(d) : NaN, mo = modes(d), R = n ? Math.max(...d) - Math.min(...d) : NaN, v = n > 1 ? variance(d) : NaN, s = Math.sqrt(v), cv = m > 0 ? s / m * 100 : NaN;
+  return [['ν (πλήθος)', String(n)], ['x̄ (μέση τιμή)', fmt(m)], ['δ (διάμεσος)', fmt(me)], ['M₀ (επικρατούσα)', n ? (mo.length ? mo.map(x => fmt(x)).join(', ') : 'καμία*') : '—'], ['R (εύρος)', fmt(R)], ['s² (διακύμανση)', fmt(v)], ['s (τυπ. απόκλιση)', fmt(s)], ['CV', isFinite(cv) ? fmt(cv, 1) + '%' : '—']];
+}
+function statsGrid(d) { const g = el('div', { class: 'stats' }); statItems(d).forEach(([k, v]) => g.append(el('div', { class: 'stat' }, el('span', {}, k), el('b', {}, v)))); return g; }
+function freqView(d) {
+  const n = d.length, u = [...new Set(d)].sort((a, b) => a - b), wrap = el('div');
+  if (u.length <= 12) {
+    const f = u.map(x => d.filter(v => v === x).length), c = cumsum(f);
+    wrap.append(freqTable([...u.map((x, i) => ({ c: [fmt(x), String(f[i]), fmt(f[i] / n * 100, 1), String(c[i]), fmt(c[i] / n * 100, 1)] })), { tot: true, c: ['Σύνολο', String(n), '100', '—', '—'] }], ['xᵢ', 'νᵢ', 'fᵢ %', 'Νᵢ', 'Fᵢ %']), el('div', { class: 'chartbox' }, barCat(u.map(x => fmt(x)), f).svg));
+  } else {
+    const k = Math.ceil(1 + 3.322 * Math.log10(n)), mn = Math.min(...d), mx = Math.max(...d), cw = niceNum((mx - mn) / k), L0 = Math.floor(mn / cw) * cw, cls = [];
+    for (let a = L0; a <= mx + 1e-9; a += cw) cls.push([+a.toFixed(6), +(a + cw).toFixed(6)]);
+    const f = cls.map(([a, b]) => d.filter(v => v >= a - 1e-9 && v < b - 1e-9).length), c = cumsum(f);
+    wrap.append(el('p', { class: 'mut small' }, `Πολλές διαφορετικές τιμές → ομαδοποίηση σε ${cls.length} κλάσεις πλάτους ${fmt(cw)} (κανόνας του Sturges).`),
+      freqTable([...cls.map(([a, b], i) => ({ c: [`[${fmt(a)}, ${fmt(b)})`, String(f[i]), fmt(f[i] / n * 100, 1), String(c[i]), fmt(c[i] / n * 100, 1)] })), { tot: true, c: ['Σύνολο', String(n), '100', '—', '—'] }], ['Κλάση', 'νᵢ', 'fᵢ %', 'Νᵢ', 'Fᵢ %']),
+      el('div', { class: 'chartbox' }, histChart(cls, f, { xl: 'Τιμές', aria: 'Ιστόγραμμα των δεδομένων σας' }).svg));
+  }
+  return wrap;
+}
+const LAB_CH = [
+  { id: 'lab.c1', t: 'Φτιάξε <b>τουλάχιστον 5</b> βαθμούς με <b>μέση τιμή 6</b> και <b>διάμεσο 7</b>.', test: d => d.length >= 5 && Math.abs(mean(d) - 6) < 1e-9 && Math.abs(median(d) - 7) < 1e-9 },
+  { id: 'lab.c2', t: 'Φτιάξε δεδομένα όπου η <b>μέση τιμή ξεπερνά τη διάμεσο</b> κατά τουλάχιστον 1 (δοκίμασε μια ακραία τιμή!).', test: d => d.length >= 3 && mean(d) - median(d) >= 1 - 1e-9 },
+  { id: 'lab.c3', t: 'Φτιάξε <b>τουλάχιστον 6</b> βαθμούς, όχι όλους ίδιους, με <b>CV &lt; 10%</b> (ομοιογενή δεδομένα).', test: d => d.length >= 6 && mean(d) > 0 && variance(d) > 0 && Math.sqrt(variance(d)) / mean(d) < 0.1 },
+  { id: 'lab.c4', t: 'Φτιάξε δεδομένα με <b>δύο επικρατούσες τιμές</b>.', test: d => modes(d).length === 2 }];
+function renderLab(view) {
+  view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'),
+    el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('div', { class: 'kicker' }, 'Ελεύθερη εξερεύνηση · Πληροφορική & Στατιστική'), el('h1', { tabindex: '-1' }, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Φτιάξε δικά σου δεδομένα και δες ζωντανά πώς αλλάζουν τα μέτρα θέσης και διασποράς — και πώς υπολογίζονται σε υπολογιστικό φύλλο.'))));
+  let cnt = (Array.isArray(S.lab.cnt) && S.lab.cnt.length === 11) ? S.lab.cnt.slice() : [0, 0, 0, 0, 1, 1, 2, 1, 1, 0, 0], cur = 6;
+  const W = 620, H = 330, Lp = 24, Rp = 24, T = 18, BASE = 262, colW = (W - Lp - Rp) / 11, STEP = 14.5, MAXS = 16;
+  const X = v => Lp + (v + 0.5) * colW;
+  const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart lab', tabindex: '0', role: 'application', 'aria-label': 'Σημειόγραμμα βαθμών 0 έως 10. Βελάκια αριστερά/δεξιά: επιλογή στήλης. Συν ή πάνω βελάκι: προσθήκη. Πλην ή κάτω βελάκι: αφαίρεση.' });
+  const live = el('p', { class: 'sr', 'aria-live': 'polite' });
+  const data = () => { const d = []; cnt.forEach((c, v) => { for (let k = 0; k < c; k++) d.push(v); }); return d; };
+  function draw() {
+    svg.innerHTML = '';
+    svg.append(sv('rect', { x: X(cur) - colW / 2 + 2, y: T - 6, width: colW - 4, height: BASE - T + 6, rx: 8, class: 'curcol' }), sv('line', { x1: Lp, x2: W - Rp, y1: BASE, y2: BASE, class: 'axis' }));
+    const d = data(), md = modes(d);
+    for (let v = 0; v <= 10; v++) {
+      svg.append(sv('text', { x: X(v), y: BASE + 18, 'text-anchor': 'middle', class: v === cur ? 'lbl' : null }, String(v)));
+      const show = Math.min(cnt[v], MAXS);
+      for (let k = 0; k < show; k++) svg.append(sv('circle', { cx: X(v), cy: BASE - 9 - k * STEP, r: 6.3, class: 'dot' + (md.includes(v) ? ' mode' : '') }));
+      if (cnt[v] > MAXS) svg.append(sv('text', { x: X(v), y: T + 4, 'text-anchor': 'middle', class: 'lbl' }, '+' + (cnt[v] - MAXS)));
+    }
+    if (d.length) {
+      const m = mean(d), me = median(d), mx = X(m);
+      svg.append(sv('line', { x1: X(me), x2: X(me), y1: T, y2: BASE, class: 'medline' }), sv('text', { x: X(me), y: T - 4, 'text-anchor': 'middle', class: 'medlbl' }, 'δ'));
+      svg.append(sv('polygon', { points: `${mx},${BASE + 26} ${mx - 9},${BASE + 41} ${mx + 9},${BASE + 41}`, class: 'meantri' }), sv('text', { x: mx, y: BASE + 57, 'text-anchor': 'middle', class: 'lbl' }, 'x̄'));
+    }
+  }
+  const statsEl = el('div'), ssEl = el('div', { class: 'ss' }), chList = el('ul', { class: 'chl' });
+  function ssDraw() {
+    const d = data(), n = d.length, r = n ? `A2:A${n + 1}` : 'A2:A2', m = mean(d), s = n > 1 ? Math.sqrt(variance(d)) : NaN, em = excelMode(d);
+    const t = el('table', {}, el('tr', {}, el('th', {}, ''), el('th', {}, 'A')), el('tr', {}, el('th', {}, '1'), el('td', {}, 'Βαθμός')));
+    d.slice(0, 5).forEach((v, k) => t.append(el('tr', {}, el('th', {}, String(k + 2)), el('td', {}, String(v)))));
+    if (n > 5) t.append(el('tr', {}, el('th', {}, '⋮'), el('td', {}, `… έως A${n + 1}`)));
+    const F = [['Πλήθος', `=COUNT(${r})`, String(n)], ['Μέση τιμή', `=AVERAGE(${r})`, fmt(m)], ['Διάμεσος', `=MEDIAN(${r})`, fmt(n ? median(d) : NaN)], ['Επικρατούσα', `=MODE.SNGL(${r})`, em === null ? '#N/A' : fmt(em)], ['Εύρος', `=MAX(${r})-MIN(${r})`, fmt(n ? Math.max(...d) - Math.min(...d) : NaN)], ['Διακύμανση', `=VAR.S(${r})`, fmt(n > 1 ? variance(d) : NaN)], ['Τυπική απόκλιση', `=STDEV.S(${r})`, fmt(s)], ['Συντ. μεταβλητότητας', `=STDEV.S(${r})/AVERAGE(${r})`, isFinite(s / m) ? fmt(s / m * 100, 1) + '%' : '—']];
+    const ft = el('table'); F.forEach(([a, b, c]) => ft.append(el('tr', {}, el('td', {}, a), el('td', {}, el('code', {}, b)), el('td', { class: 'val' }, c))));
+    ssEl.innerHTML = ''; ssEl.append(el('div', { class: 'sscols' }, t, el('div', { class: 'ftw' }, ft)));
+  }
+  function chDraw() {
+    const d = data(); chList.innerHTML = '';
+    LAB_CH.forEach(c => { if (!S.tasks[c.id] && c.test(d)) { finish(c.id, 15); toast('🏗️ Πρόκληση εργαστηρίου: +15 XP'); } chList.append(el('li', {}, el('span', { class: 'st', 'aria-hidden': 'true' }, S.tasks[c.id] ? '✅' : '⬜'), el('span', { html: c.t + (S.tasks[c.id] ? ' <b class="xpt">Ολοκληρώθηκε</b>' : '') }))); });
+    if (LAB_CH.filter(c => S.tasks[c.id]).length >= 3) giveBadge('lab');
+  }
+  function changed(announce) {
+    draw(); statsEl.innerHTML = ''; statsEl.append(statsGrid(data()), el('p', { class: 'mut small' }, '*Όταν όλες οι τιμές εμφανίζονται εξίσου συχνά, δεν υπάρχει επικρατούσα τιμή.'));
+    ssDraw(); S.lab.cnt = cnt.slice(); save(); chDraw();
+    if (announce) { const d = data(); live.textContent = `Βαθμός ${cur}: ${cnt[cur]} φορές. Πλήθος ${d.length}, μέση τιμή ${fmt(mean(d))}, διάμεσος ${fmt(median(d))}.`; }
+  }
+  svg.addEventListener('pointerdown', e => {
+    const p = svgPt(svg, e), v = Math.floor((p.x - Lp) / colW);
+    if (v < 0 || v > 10) return;
+    cur = v;
+    if (p.y > BASE + 4) { changed(false); return; }
+    const shown = Math.min(cnt[v], MAXS), topY = BASE - 9 - (shown - 1) * STEP - 8;
+    if (cnt[v] > 0 && p.y >= topY) cnt[v]--; else if (cnt[v] < 99) cnt[v]++;
+    changed(true);
+  });
+  svg.addEventListener('keydown', e => {
+    let h = true;
+    if (e.key === 'ArrowLeft') cur = Math.max(0, cur - 1);
+    else if (e.key === 'ArrowRight') cur = Math.min(10, cur + 1);
+    else if (['+', '=', 'Enter', ' ', 'ArrowUp'].includes(e.key)) { if (cnt[cur] < 99) cnt[cur]++; }
+    else if (['-', 'Backspace', 'Delete', 'ArrowDown'].includes(e.key)) { if (cnt[cur] > 0) cnt[cur]--; }
+    else h = false;
+    if (h) { e.preventDefault(); changed(true); }
+  });
+  const addIn = el('input', { class: 'num', type: 'text', inputmode: 'numeric', 'aria-label': 'Βαθμός για προσθήκη (0–10)', placeholder: '0–10' });
+  const addB = el('button', { class: 'btn', type: 'button' }, '➕ Πρόσθεσε');
+  addB.onclick = () => { const v = parseNum(addIn.value); if (Number.isInteger(v) && v >= 0 && v <= 10) { cnt[v]++; cur = v; addIn.value = ''; changed(true); addIn.focus(); } else toast('Γράψε έναν ακέραιο βαθμό από 0 έως 10.'); };
+  addIn.addEventListener('keydown', e => { if (e.key === 'Enter') addB.onclick(); });
+  const card1 = el('section', { class: 'card' }, el('h2', {}, 'Σημειόγραμμα βαθμών (0–10)'),
+    el('p', { class: 'mut', html: 'Κάνε <b>κλικ πάνω από μια στήλη</b> για να προσθέσεις βαθμό και <b>κλικ σε μια κουκκίδα</b> για να τον αφαιρέσεις. Πληκτρολόγιο: <kbd>←</kbd> <kbd>→</kbd> επιλογή στήλης, <kbd>+</kbd> προσθήκη, <kbd>−</kbd> αφαίρεση. ▲ = μέση τιμή · πράσινη γραμμή = διάμεσος · πορτοκαλί κουκκίδες = επικρατούσα.' }),
+    el('div', { class: 'chartbox' }, svg), live,
+    el('div', { class: 'row' }, addIn, addB,
+      el('button', { class: 'btn ghost', type: 'button', onclick: () => { cnt = Array(11).fill(0); GRADES.forEach(g => cnt[g]++); changed(true); } }, '📥 Οι 60 βαθμοί (Άσκ. 1)'),
+      el('button', { class: 'btn ghost', type: 'button', onclick: () => { cnt = Array(11).fill(0); for (let i = 0; i < 12; i++) cnt[3 + Math.floor(Math.random() * 8)]++; changed(true); } }, '🎲 Τυχαία'),
+      el('button', { class: 'btn ghost', type: 'button', onclick: () => { cnt = Array(11).fill(0); changed(true); } }, '🧹 Καθάρισμα')),
+    statsEl);
+  const card2 = el('section', { class: 'card' }, el('h2', {}, '🏗️ Προκλήσεις'), el('p', { class: 'mut small' }, 'Οι προκλήσεις ελέγχονται αυτόματα κάθε φορά που αλλάζεις τα δεδομένα.'), chList);
+  const copyB = el('button', { class: 'btn', type: 'button' }, '📋 Αντιγραφή δεδομένων για υπολογιστικό φύλλο');
+  copyB.onclick = () => copyText('Βαθμός\n' + data().join('\n'), 'Αντιγράφηκαν! Επικόλλησέ τα στο κελί A1 του υπολογιστικού φύλλου.');
+  const card3 = el('section', { class: 'card' }, el('h2', {}, '🧾 Το ίδιο σε υπολογιστικό φύλλο'),
+    el('p', { class: 'mut', html: 'Στο Excel, στο LibreOffice Calc ή στο Google Sheets υπολογίζουμε τα ίδια μέτρα με <b>συναρτήσεις</b>. Αντέγραψε τα δεδομένα, επικόλλησέ τα στη στήλη A και πληκτρολόγησε τους τύπους. Βγαίνουν οι ίδιες τιμές;' }),
+    ssEl, el('div', { class: 'row' }, copyB), el('p', { class: 'mut small', html: 'Σημείωση: οι VAR.S / STDEV.S διαιρούν με ν − 1 (δείγμα)· οι VAR.P / STDEV.P με ν (πληθυσμός). Αν υπάρχουν πολλές επικρατούσες, η MODE.SNGL δίνει μόνο την πρώτη.' }));
+  const ta = el('textarea', { rows: '4', placeholder: 'π.χ. 12 8 15 9,5 20 7 11 …', 'aria-label': 'Δεδομένα για ανάλυση' }), res = el('div');
+  const anB = el('button', { class: 'btn pri', type: 'button' }, '🔍 Ανάλυση');
+  anB.onclick = () => {
+    const d = ta.value.split(/[\s;]+/).map(t => parseNum(t)).filter(v => isFinite(v));
+    res.innerHTML = '';
+    if (d.length < 2) { res.append(el('div', { class: 'say bad' }, 'Γράψε τουλάχιστον 2 αριθμούς.')); return; }
+    res.append(statsGrid(d), freqView(d));
+    if (d.every(v => Number.isInteger(v) && v >= 0 && v <= 10)) res.append(el('div', { class: 'row' }, el('button', { class: 'btn', type: 'button', onclick: () => { cnt = Array(11).fill(0); d.forEach(v => cnt[v]++); changed(true); card1.scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); } }, '↑ Φόρτωσέ τα στο σημειόγραμμα')));
+  };
+  const card4 = el('section', { class: 'card' }, el('h2', {}, '📥 Τα δικά μας δεδομένα'),
+    el('p', { class: 'mut', html: 'Επικόλλησε τα <b>ανώνυμα</b> δεδομένα της τάξης (π.χ. ώρες στο διαδίκτυο την εβδομάδα). Χώρισε τις τιμές με κενό, <kbd>Enter</kbd> ή ερωτηματικό (;). Για δεκαδικά χρησιμοποίησε κόμμα ή τελεία. Τα δεδομένα δεν αποστέλλονται πουθενά.' }),
+    ta, el('div', { class: 'row' }, anB), res);
+  view.append(card1, card3, card2, card4);
+  changed(false);
+}
+
+/* =================== ΚΟΥΙΖ =================== */
+const QUIZ = [
+  { t: 'mc', q: 'Στο δείγμα 2, 3, 3, 8, 9 η <b>διάμεσος</b> είναι:', o: [['3', 1, 'Ταξινομημένα: 2, 3, <b>3</b>, 8, 9 → η μεσαία (3η) τιμή είναι 3.'], ['5', 0, 'Το 5 είναι η μέση τιμή (25/5).'], ['8', 0, 'Το 8 δεν βρίσκεται στη μεσαία θέση.'], ['3,5', 0, 'Με ν = 5 (περιττό) η διάμεσος είναι η μεσαία τιμή· δεν παίρνουμε μέσο όρο δύο τιμών.']] },
+  { t: 'mc', q: 'Σε πίνακα συχνοτήτων με ν = 40, μια τιμή έχει νᵢ = 10. Η <b>σχετική συχνότητα fᵢ%</b> είναι:', o: [['25%', 1, '10/40 · 100 = 25%.'], ['10%', 0, 'Το 10 είναι η απόλυτη συχνότητα.'], ['40%', 0, 'Το 40 είναι το μέγεθος του δείγματος.'], ['4%', 0, 'Αντέστρεψες τον λόγο: fᵢ = νᵢ/ν = 10/40.']] },
+  { t: 'num', q: 'Ποια είναι η <b>επικρατούσα τιμή</b> των 4, 6, 6, 7, 7, 7, 8;', a: 7, e: 'Το 7 εμφανίζεται 3 φορές — συχνότερα από κάθε άλλη τιμή.' },
+  { t: 'mc', q: 'Προσθέτουμε σε ένα δείγμα μια <b>πολύ μεγάλη (ακραία) τιμή</b>. Ποιο μέτρο επηρεάζεται περισσότερο;', o: [['Η μέση τιμή', 1, 'Η μέση τιμή «τραβιέται» από τις ακραίες τιμές· η διάμεσος σχεδόν δεν αλλάζει.'], ['Η διάμεσος', 0, 'Η διάμεσος μετακινείται το πολύ κατά μία θέση — είναι «ανθεκτική».'], ['Η επικρατούσα τιμή', 0, 'Μια μοναδική ακραία τιμή δεν αλλάζει τη συχνότερη τιμή.'], ['Κανένα', 0, 'Δοκίμασέ το στο Εργαστήριο!']] },
+  { t: 'num', q: 'Ποιο είναι το <b>κέντρο</b> της κλάσης [6, 8);', a: 7, e: '(6 + 8)/2 = 7.' },
+  { t: 'mc', q: 'Το <b>πολύγωνο συχνοτήτων</b> ενώνει:', o: [['τα μέσα των πάνω πλευρών των ορθογωνίων του ιστογράμματος', 1, 'Σημεία (κέντρο κλάσης, νᵢ), με δύο μηδενικές κλάσεις στα άκρα.'], ['τις πάνω αριστερές γωνίες των ορθογωνίων', 0, 'Χρησιμοποιούμε τα κέντρα των κλάσεων.'], ['τα άνω όρια των κλάσεων με τις αθροιστικές συχνότητες', 0, 'Αυτό είναι το αθροιστικό πολύγωνο.'], ['τα κάτω όρια των κλάσεων', 0, 'Αυτά βρίσκονται πάνω στον άξονα, με ύψος 0.']] },
+  { t: 'num', q: 'Αν Ν₃ = 21 και ν₄ = 15, πόση είναι η <b>αθροιστική συχνότητα Ν₄</b>;', a: 36, e: 'Ν₄ = Ν₃ + ν₄ = 21 + 15 = 36.' },
+  { t: 'mc', q: 'Ένα δείγμα έχει <b>CV = 26,6%</b>. Το δείγμα είναι:', o: [['μη ομοιογενές', 1, 'Ένα δείγμα θεωρείται ομοιογενές όταν CV ≤ 10%.'], ['ομοιογενές', 0, 'Για ομοιογένεια χρειάζεται CV ≤ 10%.'], ['συμμετρικό', 0, 'Ο CV μετρά τη σχετική διασπορά, όχι τη συμμετρία.'], ['δεν μπορούμε να πούμε τίποτα', 0, 'Ο CV ακριβώς αυτό μας λέει: πόσο ομοιογενή είναι τα δεδομένα.']] },
+  { t: 'mc', q: 'Σε υπολογιστικό φύλλο, ποια συνάρτηση δίνει τη <b>διάμεσο</b> των τιμών A2:A61;', o: [['=MEDIAN(A2:A61)', 1, 'Η MEDIAN επιστρέφει τη διάμεσο.'], ['=AVERAGE(A2:A61)', 0, 'Η AVERAGE δίνει τη μέση τιμή.'], ['=MODE.SNGL(A2:A61)', 0, 'Η MODE.SNGL δίνει την επικρατούσα τιμή.'], ['=MID(A2:A61)', 0, 'Η MID είναι συνάρτηση κειμένου (αποκόπτει χαρακτήρες)!']] },
+  { t: 'mc', q: 'Η διάμεσος ενός δείγματος είναι <b>δ = 6</b>. Αυτό σημαίνει ότι:', o: [['τουλάχιστον το 50% των παρατηρήσεων είναι ≤ 6', 1, 'Και τουλάχιστον το 50% είναι ≥ 6.'], ['η συχνότερη τιμή είναι το 6', 0, 'Αυτό αφορά την επικρατούσα τιμή.'], ['ο μέσος όρος είναι 6', 0, 'Η μέση τιμή είναι άλλο μέτρο θέσης.'], ['ακριβώς οι μισές παρατηρήσεις ισούνται με 6', 0, 'Η διάμεσος δεν λέει πόσες παρατηρήσεις ισούνται με αυτήν.']] }];
+function renderQuiz(view) {
+  view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'), el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '🎓'), el('div', {}, el('div', { class: 'kicker' }, 'Τελική αξιολόγηση'), el('h1', { tabindex: '-1' }, 'Κουίζ του ντετέκτιβ'), el('p', { class: 'mut' }, '10 ερωτήσεις · μία προσπάθεια σε καθεμία · 8/10 για το σήμα 🎓'))));
+  if (!Array.isArray(S.quizRun) || S.quizRun.length !== QUIZ.length) { S.quizRun = QUIZ.map(() => null); save(); }
+  const box = el('section', { class: 'card' }), res = el('section', { class: 'card done', hidden: true, 'aria-live': 'polite' });
+  view.append(box, res);
+  const showRes = () => {
+    const sc = S.quizRun.filter(v => v === true).length;
+    res.hidden = false; res.innerHTML = '';
+    res.append(el('div', { class: 'big-stars' }, sc >= 9 ? '🏆' : sc >= 8 ? '🎓' : sc >= 5 ? '👍' : '💪'), el('h2', {}, `Σκορ: ${sc}/10`), el('p', {}, sc >= 8 ? 'Εξαιρετικά! Είσαι έτοιμος/η για πραγματικά δεδομένα.' : 'Ξαναδές τις αποστολές με τα λάθη σου και προσπάθησε ξανά!'),
+      el('div', { class: 'row', style: 'justify-content:center' }, el('button', { class: 'btn', type: 'button', onclick: () => { S.quizRun = null; save(); route(); } }, '🔄 Νέα προσπάθεια'), el('a', { class: 'btn pri', href: '#report' }, '📋 Αναφορά προόδου')));
+  };
+  const onAns = () => {
+    if (S.quizRun.every(v => v !== null)) {
+      const sc = S.quizRun.filter(v => v === true).length;
+      S.quiz = { best: Math.max(sc, (S.quiz && S.quiz.best) || 0), last: sc, date: Date.now() }; save();
+      if (sc >= 8) giveBadge('quiz');
+      showRes(); res.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' });
+    }
+  };
+  QUIZ.forEach((q, i) => {
+    const w = el('div', { class: 'q', 'data-quiz': String(i) }), fb = el('div', { class: 'fb', 'aria-live': 'polite' }), prev = S.quizRun[i];
+    w.append(el('div', { class: 'q-p', html: `<b>${i + 1}.</b> ${q.q}` }));
+    const record = ok => { S.quizRun[i] = ok; save(); finish('qz.' + i, ok ? 5 : 0, ok ? 'ok' : 'miss'); w.classList.add(ok ? 'correct' : 'revealed'); onAns(); };
+    if (q.t === 'mc') {
+      const opts = shuffle(q.o.map(o => ({ t: o[0], ok: !!o[1], why: o[2] }))), right = opts.find(o => o.ok);
+      const bs = opts.map(op => { const b = el('button', { class: 'opt', type: 'button', html: op.t }); b.onclick = () => { if (S.quizRun[i] !== null) return; bs.forEach((x, k) => { x.disabled = true; if (opts[k].ok) x.classList.add('ok'); }); if (!op.ok) b.classList.add('bad'); say(fb, op.ok ? 'ok' : 'bad', (op.ok ? '✔️ <b>Σωστά!</b> ' : '✖️ <b>Λάθος.</b> ') + op.why + (op.ok ? '' : `<br>Σωστή απάντηση: <b>${right.t}</b> — ${right.why}`)); record(op.ok); }; return b; });
+      w.append(el('div', { class: 'mc' }, ...bs), fb);
+      if (prev !== null) { bs.forEach((x, k) => { x.disabled = true; if (opts[k].ok) x.classList.add('ok'); }); w.classList.add(prev ? 'correct' : 'revealed'); say(fb, prev ? 'ok' : 'bad', prev ? '✔️ Σωστά. ' + right.why : `✖️ Σωστή απάντηση: <b>${right.t}</b> — ${right.why}`); }
+    } else {
+      const inp = el('input', { class: 'num', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': `Απάντηση στην ερώτηση ${i + 1}` }), b = el('button', { class: 'btn pri', type: 'button' }, 'Απάντηση');
+      const go = () => { if (S.quizRun[i] !== null) return; const v = parseNum(inp.value); if (isNaN(v)) { say(fb, 'warn', 'Γράψε έναν αριθμό.'); return; } const ok = Math.abs(v - q.a) < 1e-6; inp.disabled = b.disabled = true; say(fb, ok ? 'ok' : 'bad', (ok ? '✔️ <b>Σωστά!</b> ' : `✖️ <b>Λάθος.</b> Σωστή απάντηση: <b>${fmt(q.a)}</b>. `) + q.e); record(ok); };
+      b.onclick = go; inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+      w.append(el('div', { class: 'q-row' }, inp, b), fb);
+      if (prev !== null) { inp.value = fmt(q.a); inp.disabled = b.disabled = true; w.classList.add(prev ? 'correct' : 'revealed'); say(fb, prev ? 'ok' : 'bad', (prev ? '✔️ Σωστά. ' : `✖️ Σωστή απάντηση: <b>${fmt(q.a)}</b>. `) + q.e); }
+    }
+    box.append(w);
+  });
+  if (S.quizRun.every(v => v !== null)) showRes();
+}
+
+/* =================== ΑΡΧΙΚΗ, ΑΝΑΦΟΡΑ, ΟΔΗΓΟΣ =================== */
+function badgesRow() { return el('div', { class: 'badges' }, ...Object.entries(BADGES).map(([k, b]) => el('div', { class: 'badge' + (S.badges[k] ? '' : ' off'), title: b.d }, el('div', { class: 'ic', 'aria-hidden': 'true' }, b.e), el('span', {}, b.t), el('span', { class: 'sr' }, S.badges[k] ? '(το απέκτησες)' : '(δεν το έχεις ακόμη)')))); }
+function nickInput() { const n = el('input', { type: 'text', class: 'txt', maxlength: '24', value: S.nick || '', placeholder: 'π.χ. Αετός-7', 'aria-label': 'Ψευδώνυμο' }); n.addEventListener('input', () => { S.nick = n.value.trim(); save(); }); return n; }
+function renderHome(view) {
+  const rk = rank(S.xp), nx = nextRank(S.xp), pct = nx ? (S.xp - rk[0]) / (nx[0] - rk[0]) * 100 : 100;
+  view.append(el('section', { class: 'card hero' },
+    el('div', {}, el('div', { class: 'kicker' }, 'Περιγραφική Στατιστική · Αποστολές'), el('h1', { tabindex: '-1' }, '🔍 Ντετέκτιβ Δεδομένων'),
+      el('p', { html: 'Τα δεδομένα κρύβουν ιστορίες. Λύσε <b>5 υποθέσεις</b>, μάζεψε XP και σήματα και μάθε να «ανακρίνεις» δεδομένα με πίνακες, γραφήματα, μέτρα θέσης και διασποράς — στο χαρτί και στον υπολογιστή.' }),
+      el('label', { class: 'nick' }, el('span', {}, 'Το ψευδώνυμό σου (όχι το πραγματικό σου όνομα):'), nickInput())),
+    el('div', { class: 'rankbox' }, el('div', { class: 'rk' }, rk[1]), el('div', { class: 'xpbig' }, `${S.xp} XP`),
+      el('div', { class: 'xpbar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(Math.round(pct)), 'aria-label': 'Πρόοδος προς τον επόμενο βαθμό' }, el('i', { style: `width:${pct}%` })),
+      el('div', { class: 'mut small' }, nx ? `Επόμενος βαθμός: ${nx[1]} (${nx[0]} XP)` : 'Έφτασες στον ανώτερο βαθμό! 🏆'))));
+  const grid = el('div', { class: 'grid' });
+  Object.values(MIS).forEach(M => {
+    const st = stars(M.id), started = missionTasks(M.id).some(t => S.tasks[t]);
+    grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, M.emoji), el('div', {}, el('span', { class: 'tag' }, `Αποστολή ${M.n}`), ' ', M.challenge ? el('span', { class: 'tag ch' }, '★ Πρόκληση') : null),
+      el('h3', {}, M.title), el('p', { class: 'mut' }, M.sub), el('p', { class: 'small mut' }, '📄 ' + M.ex),
+      el('div', { class: 'stars', role: 'img', 'aria-label': S.missions[M.id] ? `${st} από 3 αστέρια` : 'Δεν έχει ολοκληρωθεί' }, S.missions[M.id] ? starStr(st) : ''),
+      el('a', { class: 'btn pri', href: '#' + M.id }, S.missions[M.id] ? 'Ξαναπαίξε' : started ? 'Συνέχισε ▸' : 'Ξεκίνα ▸')));
+  });
+  const labN = LAB_CH.filter(c => S.tasks[c.id]).length;
+  grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, '🧪'), el('div', {}, el('span', { class: 'tag' }, 'Εργαστήριο')), el('h3', {}, 'Εργαστήριο δεδομένων'), el('p', { class: 'mut' }, 'Φτιάξε δικά σου δεδομένα · Υπολογιστικό φύλλο · Δεδομένα της τάξης'), el('p', { class: 'small mut' }, `🏗️ Προκλήσεις: ${labN}/4`), el('div', { class: 'stars' }, ''), el('a', { class: 'btn pri', href: '#lab' }, 'Άνοιξε ▸')));
+  grid.append(el('article', { class: 'card mcard' }, el('div', { class: 'em', 'aria-hidden': 'true' }, '🎓'), el('div', {}, el('span', { class: 'tag' }, 'Αξιολόγηση')), el('h3', {}, 'Τελικό κουίζ'), el('p', { class: 'mut' }, '10 ερωτήσεις από όλες τις αποστολές'), el('p', { class: 'small mut' }, S.quiz ? `🎯 Καλύτερο σκορ: ${S.quiz.best}/10` : '🎯 Δεν έχει δοθεί ακόμη'), el('div', { class: 'stars' }, ''), el('a', { class: 'btn pri', href: '#quiz' }, 'Ξεκίνα ▸')));
+  view.append(el('h2', { class: 'sec' }, 'Χάρτης αποστολών'), el('p', { class: 'mut small' }, 'Προτεινόμενη σειρά: 1 → 2 → 3 → 4, μετά Εργαστήριο και Κουίζ. Η Αποστολή 5 είναι πρόκληση για όσους προχωρούν γρηγορότερα.'), grid,
+    el('h2', { class: 'sec' }, 'Τα σήματά σου'), badgesRow());
+}
+function renderReport(view) {
+  view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'), el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '📋'), el('div', {}, el('div', { class: 'kicker' }, 'Για τον/την εκπαιδευτικό'), el('h1', { tabindex: '-1' }, 'Αναφορά προόδου'), el('p', { class: 'mut' }, 'Αντέγραψέ την για να την παραδώσεις (σε υπολογιστή εκτυπώνεται και με Ctrl+P).'))));
+  const rows = Object.values(MIS).map(M => { const { got, max } = missionXP(M.id), st = stars(M.id); return [`${M.n}. ${M.title}`, S.missions[M.id] ? '✔️ Ολοκληρώθηκε' : (missionTasks(M.id).some(t => S.tasks[t]) ? '⏳ Σε εξέλιξη' : '—'), S.missions[M.id] ? starStr(st) : '', `${got}/${max}`]; });
+  const labN = LAB_CH.filter(c => S.tasks[c.id]).length, hints = Object.values(S.tasks).filter(t => t.how === 'revealed').length;
+  const t = el('table', { class: 'tbl rep' }, el('thead', {}, el('tr', {}, ...['Αποστολή', 'Κατάσταση', 'Αστέρια', 'XP'].map(h => el('th', { scope: 'col' }, h)))), el('tbody', {}, ...rows.map(r => el('tr', {}, el('th', { scope: 'row' }, r[0]), ...r.slice(1).map(c => el('td', {}, c))))));
+  const quizTxt = S.quiz ? `${S.quiz.last}/10 (καλύτερο: ${S.quiz.best}/10)` : 'δεν έχει δοθεί';
+  const date = new Date().toLocaleString('el-GR');
+  const card = el('section', { class: 'card' },
+    el('label', { class: 'nick' }, el('span', {}, 'Ψευδώνυμο:'), nickInput()),
+    el('p', {}, el('b', {}, 'Ημερομηνία: '), date, el('br'), el('b', {}, 'Σύνολο XP: '), `${S.xp} (${rank(S.xp)[1]})`, el('br'), el('b', {}, 'Εργαστήριο: '), `${labN}/4 προκλήσεις`, el('br'), el('b', {}, 'Κουίζ: '), quizTxt, el('br'), el('b', {}, 'Λύσεις που ζητήθηκαν: '), String(hints)),
+    el('div', { class: 'tblwrap' }, t), el('h2', { class: 'sec' }, 'Σήματα'), badgesRow());
+  const txt = () => ['Ντετέκτιβ Δεδομένων — Αναφορά προόδου', `Ψευδώνυμο: ${S.nick || '—'}`, `Ημερομηνία: ${date}`, `XP: ${S.xp} (${rank(S.xp)[1]})`, ...rows.map(r => `Αποστολή ${r[0]}: ${r[1]} ${r[2]} (${r[3]} XP)`), `Εργαστήριο: ${labN}/4 προκλήσεις`, `Κουίζ: ${quizTxt}`, `Λύσεις που ζητήθηκαν: ${hints}`, 'Σήματα: ' + (Object.keys(S.badges).map(k => BADGES[k].e + ' ' + BADGES[k].t).join(', ') || '—')].join('\n');
+  const rs = el('button', { class: 'btn danger', type: 'button' }, '🗑️ Μηδενισμός προόδου'); let armed = false;
+  rs.onclick = () => { if (!armed) { armed = true; rs.textContent = '⚠️ Πάτησε ξανά για επιβεβαίωση'; setTimeout(() => { armed = false; rs.textContent = '🗑️ Μηδενισμός προόδου'; }, 4000); return; } const ui = S.ui; S = blank(); S.ui = ui; save(); updateHud(); toast('Η πρόοδος μηδενίστηκε.'); if (location.hash === '#home') route(); else location.hash = '#home'; };
+  view.append(card, el('div', { class: 'row noprint' }, el('button', { class: 'btn pri', type: 'button', onclick: () => copyText(txt(), 'Η αναφορά αντιγράφηκε!') }, '📋 Αντιγραφή κειμένου'), rs));
+}
+function renderGuide(view) {
+  view.append(el('a', { href: '#home', class: 'back' }, '← Χάρτης αποστολών'), el('div', { class: 'mhead' }, el('div', { class: 'memo', 'aria-hidden': 'true' }, '🧭'), el('div', {}, el('div', { class: 'kicker' }, 'Βοήθεια'), el('h1', { tabindex: '-1' }, 'Οδηγός χρήσης'))));
+  const tch = el('input', { type: 'checkbox', id: 'tmode' }); tch.checked = TEACHER;
+  tch.addEventListener('change', () => { S.ui.teacher = tch.checked; TEACHER = tch.checked; save(); toast(TEACHER ? 'Λειτουργία εκπαιδευτικού: ενεργή' : 'Λειτουργία εκπαιδευτικού: ανενεργή'); });
+  view.append(
+    el('section', { class: 'card guide-sec', html: '<h2>🎮 Για μαθητές</h2><ul><li>Διάλεξε μια <b>αποστολή</b> από τον χάρτη. Κάθε αποστολή έχει βήματα που ξεκλειδώνουν το ένα μετά το άλλο.</li><li>Γράφεις αριθμούς με <b>κόμμα ή τελεία</b> (6,05 ή 6.05). Πατάς <kbd>Enter</kbd> ή «Έλεγχος».</li><li>Μετά από κάθε απάντηση παίρνεις <b>άμεση ανατροφοδότηση</b> που εξηγεί το πιθανό λάθος. Η «💡 Υπόδειξη» βοηθά, αλλά μειώνει λίγο τους πόντους. Μετά από 2 λάθη εμφανίζεται η «👁️ Λύση».</li><li>Μαζεύεις <b>XP</b>, <b>αστέρια</b> και <b>σήματα</b>. Η πρόοδος αποθηκεύεται μόνο σε αυτόν τον υπολογιστή/φυλλομετρητή.</li><li>Στο <b>Εργαστήριο</b> φτιάχνεις δικά σου δεδομένα και βλέπεις τα ίδια μέτρα με συναρτήσεις υπολογιστικού φύλλου.</li></ul>' }),
+    el('section', { class: 'card guide-sec', html: '<h2>👩‍🏫 Για εκπαιδευτικούς</h2><p>Προτεινόμενη ροή (3 διδακτικές ώρες, εργασία σε ζεύγη):</p><div class="tblwrap"><table class="tbl rep"><thead><tr><th scope="col">Ώρα</th><th scope="col">Δραστηριότητα</th><th scope="col">Σύνδεση με την Εργασία 1</th></tr></thead><tbody><tr><th scope="row">1η</th><td>Αποστολές 1–2: πίνακας συχνοτήτων, μέση τιμή, διάμεσος, επικρατούσα τιμή</td><td>Άσκηση 1 (α, β: μέτρα θέσης, γ, δ)</td></tr><tr><th scope="row">2η</th><td>Αποστολές 3–4: ομαδοποιημένα δεδομένα, ιστόγραμμα, πολύγωνα, εκατοστιαία σημεία</td><td>Ασκήσεις 2 και 3 (α: x̄, δ, P₄₀ · β · γ)</td></tr><tr><th scope="row">3η</th><td>Εργαστήριο & υπολογιστικό φύλλο με δεδομένα της τάξης, κουίζ, αναστοχασμός</td><td>Μεταφορά της γνώσης σε νέα δεδομένα</td></tr><tr><th scope="row">Επέκταση</th><td>Αποστολή 5 (★): διακύμανση, τυπική απόκλιση, CV</td><td>Άσκηση 1β (s², CV), Άσκηση 3α (s, CV)</td></tr></tbody></table></div><p>Η σελίδα <b>Αναφορά</b> συνοψίζει την πρόοδο κάθε μαθητή (XP, αστέρια, σκορ κουίζ, λύσεις που ζητήθηκαν) και αντιγράφεται για το eclass (σε υπολογιστή εκτυπώνεται και με Ctrl+P).</p>' }),
+    el('section', { class: 'card guide-sec' }, el('h2', {}, '🧑‍🏫 Λειτουργία εκπαιδευτικού'), el('label', { class: 'row', for: 'tmode' }, tch, el('span', {}, 'Εμφάνιση του κουμπιού «👁️ Λύση» σε όλες τις ερωτήσεις (π.χ. για συζήτηση στην ολομέλεια με βιντεοπροβολέα).'))),
+    el('section', { class: 'card guide-sec', html: '<h2>♿ Προσβασιμότητα</h2><ul><li>Όλα τα στοιχεία λειτουργούν και με πληκτρολόγιο (<kbd>Tab</kbd>, βελάκια, <kbd>Enter</kbd>).</li><li>Κουμπί <b>A+</b>: μεγαλύτερα γράμματα · κουμπί <b>🌓</b>: φωτεινό/σκοτεινό θέμα.</li><li>Η ανατροφοδότηση ανακοινώνεται σε αναγνώστες οθόνης· τα γραφήματα έχουν εναλλακτικό κείμενο.</li><li>Σεβόμαστε τη ρύθμιση «λιγότερη κίνηση» του λειτουργικού συστήματος.</li></ul>' }),
+    el('section', { class: 'card guide-sec', html: '<h2>🔒 Ιδιωτικότητα</h2><p>Το υλικό είναι ένα αυτόνομο αρχείο HTML: δεν χρειάζεται λογαριασμό, δεν συλλέγει προσωπικά δεδομένα και δεν στέλνει τίποτα στο διαδίκτυο. Η πρόοδος αποθηκεύεται τοπικά στον φυλλομετρητή (localStorage). Χρησιμοποιείτε <b>ψευδώνυμα</b>, όχι ονόματα.</p>' }),
+    el('section', { class: 'card guide-sec', html: `<h2>ℹ️ Σχετικά</h2><p>Ψηφιακό υλικό για το μάθημα <b>CS148 – Ανάπτυξη Ψηφιακού Υλικού και Διδακτικών Σεναρίων με ΤΠΕ</b>. Δημιουργός: ${AUTHOR}. Τα δεδομένα των αποστολών προέρχονται από την «Εργασία 1» του μαθήματος Πιθανότητες–Στατιστική (Τμήμα Πληροφορικής, Πανεπιστήμιο Δυτικής Μακεδονίας). Κατασκευή σε HTML/CSS/JavaScript χωρίς εξωτερικές βιβλιοθήκες (λειτουργεί και χωρίς διαδίκτυο), με τη βοήθεια εργαλείου παραγωγικής ΤΝ (Claude). Δεν χρησιμοποιήθηκε υλικό τρίτων· τα γραφικά είναι SVG και emoji του συστήματος.</p>` }));
+}
+
+/* =================== ΔΡΟΜΟΛΟΓΗΣΗ =================== */
+const ROUTES = { home: renderHome, lab: renderLab, quiz: renderQuiz, report: renderReport, guide: renderGuide };
+let booted = false;
+function route() {
+  const r = (location.hash || '#home').slice(1).split('?')[0];
+  GATES = [];
+  const view = $('#view'); view.innerHTML = '';
+  if (MIS[r]) renderMission(view, r); else (ROUTES[r] || renderHome)(view);
+  document.title = 'Ντετέκτιβ Δεδομένων' + (MIS[r] ? ' · ' + MIS[r].title : '');
+  document.querySelectorAll('nav.main a').forEach(a => a.removeAttribute('aria-current'));
+  const act = document.querySelector(`nav.main a[data-r="${MIS[r] ? 'home' : (ROUTES[r] ? r : 'home')}"]`);
+  if (act) act.setAttribute('aria-current', 'page');
+  window.scrollTo(0, 0);
+  if (booted) { const h1 = view.querySelector('h1'); if (h1) h1.focus({ preventScroll: true }); }
+  booted = true;
+}
+function applyUi() {
+  const root = document.documentElement;
+  if (S.ui.theme) root.setAttribute('data-theme', S.ui.theme); else root.removeAttribute('data-theme');
+  root.classList.toggle('big', !!S.ui.big);
+  $('#btnBig').setAttribute('aria-pressed', String(!!S.ui.big));
+}
+$('#btnBig').onclick = () => { S.ui.big = !S.ui.big; save(); applyUi(); };
+$('#btnTheme').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  S.ui.theme = cur === 'dark' ? 'light' : 'dark'; save(); applyUi();
+};
+window.addEventListener('hashchange', route);
+window.ND = { get S() { return S; }, route, MIS, QUIZ, LAB_CH };
+document.documentElement.lang = 'el';
+applyUi(); updateHud(); route();
+</script>
+</body>
+</html>
